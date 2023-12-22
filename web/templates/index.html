@@ -9,15 +9,26 @@
 <h1>Ala ma długi</h1>
 <p>Strona do zarządzania należnościami ze swoimi znajomymi</p>
 
-<div class="login">
-    Zaloguj się lub załuż konto
-    <button class="login">
-        Zaloguj się
-    </button>
-    <button class="register">
-        Zarejestruj się
-    </button>
-    <a>Zapomniałem hasła</a>
+<div class="login-register">
+    <div class="login">
+        <form>
+            Zaloguj się
+            <input type="text" placeholder="login" name="l-username">
+            <input type="password" placeholder="password" name="l-password">
+            <input type="submit" value="Zaloguj się">
+        </form>
+        <a href="foo">Zapomniałem hasła</a>
+    </div>
+
+    <div class="register">
+        <form>
+            Zarejestruj się
+            <input type="text" placeholder="nazwa użytkownika" name="r-username">
+            <input type="password" placeholder="hasło" name="r-password">
+            <input type="password" placeholder="powtórz hasło" name="r-password-repeat">
+            <input type="submit" value="Zarejestruj się">
+        </form>
+    </div>
 </div>
 
 <footer>
