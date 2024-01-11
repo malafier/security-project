@@ -1,14 +1,17 @@
-from flask import Flask, render_template, g, request
-from flask_login import LoginManager
-from init_db import initialise
-from flask_sqlalchemy import SQLAlchemy
-from sqlalchemy.orm import DeclarativeBase
+import os
 
-from web.user import User
+from flask import Flask, render_template, request, redirect, make_response, jsonify
+from flask_login import LoginManager, login_user, logout_user, login_required
+
+from models import db, User, hash_password
 
 # app
 app = Flask(__name__)
-app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite://../db/project.db"
+app.config['SECRET_KEY'] = os.environ.get("PEPPER", "VERY_SECRET_AND_COMPLEX_KEY")
+app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///../db/project.db"
+db.init_app(app)
+with app.app_context():
+    db.create_all()
 
 # login
 login_manager = LoginManager()
@@ -24,16 +27,8 @@ def user_loader(username):
 
 @login_manager.request_loader
 def request_loader(request):
-    username = request.form.get('l-username')
+    username = request.form.get('username')
     return user_loader(username)
-
-
-# db
-class Base(DeclarativeBase):
-    pass
-
-
-db = SQLAlchemy(model_class=Base)
 
 
 @app.route('/')
@@ -43,21 +38,62 @@ def hello_world():
 
 @app.route('/login', methods=['POST'])
 def login():
-    username = request.form['l-username']
-    password = request.form['l-password']
+    username = request.json['username']
+    password = request.json['password']
     user = user_loader(username)
     if not user:
-        return 401
-    if
+        return make_response(404, 'User not found')
+    hashed_password = hash_password(password, user.salt)
+    if hashed_password != user.password:
+        return make_response(401, 'Wrong password')
+    login_user(user)
+    return render_template('home.html')
+
+
+@app.route('/home', methods=['GET'])
+@login_required
+def home_page():
+    return render_template('home.html')
 
 
 @app.route('/register', methods=['POST'])
 def register():
-    username = request.form['r-username']
-    password = request.form['r-password']
-    second_password = request.form['r-password-repeat']
+    username = request.json['username']
+    password = request.json['password']
+    second_password = request.json['password-repeat']
+    first_name, last_name = request.json['first-name'], request.json['last-name']
+
+    if password != second_password or User.query.filter_by(username=username).first():
+        return app.response_class(
+            status=400,
+            body={'message': 'Something went wrong because of you'},
+            mimetype='application/json'
+        )
+
+    user = User(username, first_name, last_name, password)
+    user.add_to_db()
+    login_user(user)
+    return render_template("snippets/recoveryPassword.html"), 201
+
+
+@app.route('/home', methods=['GET'])
+@login_required
+def heme_page():
+    return render_template('home.html')
+
+
+@app.route('/summary', methods=['GET'])
+@login_required
+def summary():
+    return render_template('snippets')
+
+
+@app.route('/logout', methods=['GET'])
+@login_required
+def logout():
+    logout_user()
+    return redirect('index.html')
 
 
 if __name__ == '__main__':
-    initialise()
-    app.run()
+    app.run(debug=True)

@@ -16,3 +16,7 @@ Prosta aplikację do ewidencji pożyczek. -- Jest grupa użytkowników, którzy 
 - informowanie użytkownika o jakości jego hasła (jego entropii),
 - kontrola odporności nowego hasła na ataki słownikowe,
 - informowanie użytkownika o nowych podłączeniach do jego konta.
+
+### Użyte algorytmy i rozwiązania
+
+- Hashowanie hasła: algorytm [scrypt](https://cryptobook.nakov.com/mac-and-key-derivation/scrypt)

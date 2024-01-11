@@ -1,0 +1,5 @@
+<nav>
+    {% for menu_item in ["home", "messages", "new loan", "others' loans", "logs"] %}
+    <a href="{{ url_for(menu_item) }}">{{ menu_item }}</a>
+    {% endfor %}
+</nav>

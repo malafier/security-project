@@ -3,23 +3,20 @@
 <head>
     <meta charset="UTF-8">
     <title>Ala ma długi</title>
+    <script src="https://unpkg.com/htmx.org@1.9.10"></script>
 </head>
 <body>
 
 <h1>Ala ma długi</h1>
 
-<nav>
-    <ul>
-        <li><a>Podsumowanie</a></li>
-        <li><a>Powiadomienia</a></li>
-        <li><a>Nowa pożyczka</a></li>
-        <li><a>Pożyczki innych</a></li>
-        <li><a>Pokarz logowania</a></li>
-    </ul>
-</nav>
+{% include "snippets/_navbar.html" %}
 
 <main>
-    <div id="target"></div>
+    <div id="target"
+        hx-get="/summary"
+        hx-target="#target"
+        hx-trigger="load"
+    ></div>
 </main>
 
 <footer>

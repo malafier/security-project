@@ -3,30 +3,59 @@
 <head>
     <meta charset="UTF-8">
     <title>Ala ma długi</title>
+    <script src="https://unpkg.com/htmx.org@1.9.10"></script>
+    <script src="https://unpkg.com/htmx.org/dist/ext/json-enc.js"></script>
 </head>
 <body>
 
 <h1>Ala ma długi</h1>
 <p>Strona do zarządzania należnościami ze swoimi znajomymi</p>
 
-<div class="login-register">
+<div id="login-register">
     <div class="login">
-        <form>
+        <form hx-ext="json-enc">
             Zaloguj się
-            <input type="text" placeholder="login" name="l-username">
-            <input type="password" placeholder="password" name="l-password">
-            <input type="submit" value="Zaloguj się">
+            <label>
+                Username
+                <input type="text" name="username">
+            </label><br>
+            <label>
+                Password
+                <input type="password" name="password">
+            </label><br>
+            <button type="submit" hx-post="/login" hx-swap="none">
+                Submit
+            </button>
         </form>
         <a href="foo">Zapomniałem hasła</a>
-    </div>
+    </div><br><br><br><br>
 
     <div class="register">
-        <form>
+        <form hx-ext="json-enc">
             Zarejestruj się
-            <input type="text" placeholder="nazwa użytkownika" name="r-username">
-            <input type="password" placeholder="hasło" name="r-password">
-            <input type="password" placeholder="powtórz hasło" name="r-password-repeat">
-            <input type="submit" value="Zarejestruj się">
+            <label>
+                Username
+                <input type="text" name="username">
+            </label><br>
+            <label>
+                Password
+                <input type="password" name="password">
+            </label><br>
+            <label>
+                Repeat password
+                <input type="password" name="password-repeat">
+            </label><br>
+            <label>
+                Firstname
+                <input type="text" name="first-name">
+            </label><br>
+            <label>
+                Lastname
+                <input type="text" name="last-name">
+            </label><br>
+            <button type="submit" hx-post="/register" hx-swap="outerHTML" hx-target="#login-register">
+                Submit
+            </button>
         </form>
     </div>
 </div>

@@ -12,3 +12,5 @@ SQLAlchemy==2.0.23
 typing_extensions==4.9.0
 Werkzeug==3.0.1
 zipp==3.17.0
+
+pyscrypt~=1.6.2
