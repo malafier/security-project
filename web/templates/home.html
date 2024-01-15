@@ -12,11 +12,12 @@
 {% include "snippets/_navbar.html" %}
 
 <main>
-    <div id="target"
-        hx-get="/summary"
-        hx-target="#target"
-        hx-trigger="load"
-    ></div>
+    <div class="container">
+        <h4>Hi {{ user.first_name }}</h4>
+        <div id="target" hx-get="/summary"
+            hx-target="#target" hx-trigger="load"
+            ></div>
+    </div>
 </main>
 
 <footer>

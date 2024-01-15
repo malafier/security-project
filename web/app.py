@@ -73,7 +73,7 @@ def register():
     user = User(username, first_name, last_name, password)
     user.add_to_db()
     login_user(user)
-    return render_template("snippets/recoveryPassword.html"), 201
+    return render_template("snippets/recovery_password.html"), 201
 
 
 @app.route('/home', methods=['GET'])

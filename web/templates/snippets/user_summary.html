@@ -1,0 +1,39 @@
+<html lang="en">
+<h4>Your summary</h4>
+
+<h5>Your debt</h5>
+{% if not user_debt %}
+    <p>You don't owe anyone anything at the moment.</p>
+{% else %}
+    <table>
+    <tr>
+        <th>User</th>
+        <th>Amount</th>
+    </tr>
+    {% for row in user_debt %}
+        <tr>
+            <td>{{ row.user }}</td>
+            <td>{{ row.amount }}</td>
+        </tr>
+    {% endfor %}
+    </table>
+{% endif %}
+
+<h5>Your loans</h5>
+{% if not other_debt %}
+    <p>No one ows you anything</p>
+{% else %}
+    <table>
+    <tr>
+        <th>User</th>
+        <th>Amount</th>
+    </tr>
+    {% for row in other_debt %}
+        <tr>
+            <td>{{ row.user }}</td>
+            <td>{{ row.amount }}</td>
+        </tr>
+    {% endfor %}
+    </table>
+{% endif %}
+</html>

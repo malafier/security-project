@@ -1,0 +1,18 @@
+<html lang="en">
+<table>
+    <tr>
+        <th>Username</th>
+        <th>Name</th>
+        <th>Ows before deadline</th>
+        <th>Ows over deadline</th>
+    </tr>
+    {% for row in users %}
+    <tr>
+        <td>{{ row.username }}</td>
+        <td>{{ row.full_name }}</td>
+        <td>{{ row.legal_debt }}</td>
+        <td>{{ row.illegal_debt }}</td>
+    </tr>
+    {% endfor %}
+</table>
+</html>
