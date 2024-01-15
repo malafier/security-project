@@ -3,8 +3,6 @@
 <head>
     <meta charset="UTF-8">
     <title>Ala ma długi</title>
-    <script src="https://unpkg.com/htmx.org@1.9.10"></script>
-    <script src="https://unpkg.com/htmx.org/dist/ext/json-enc.js"></script>
 </head>
 <body>
 
@@ -13,51 +11,45 @@
 
 <div id="login-register">
     <div class="login">
-        <form hx-ext="json-enc">
+        <form method="post" action="{{ url_for('login') }}">
             Zaloguj się
-            <label>
-                Username
-                <input type="text" name="username">
-            </label><br>
-            <label>
-                Password
-                <input type="password" name="password">
-            </label><br>
-            <button type="submit" hx-post="/login" hx-swap="none">
-                Submit
-            </button>
+            <label>Username<input type="text" name="username" id="username" required></label>
+            <br>
+            <label>Password<input type="password" name="password" id="password" required></label>
+            <br>
+            <input type="submit" value="Login">
         </form>
         <a href="foo">Zapomniałem hasła</a>
-    </div><br><br><br><br>
+    </div>
+    <br><br><br><br>
 
     <div class="register">
-        <form hx-ext="json-enc">
+        <form method="post" action="{{ url_for('register') }}">
             Zarejestruj się
-            <label>
-                Username
-                <input type="text" name="username">
-            </label><br>
-            <label>
-                Password
-                <input type="password" name="password">
-            </label><br>
-            <label>
-                Repeat password
-                <input type="password" name="password-repeat">
-            </label><br>
-            <label>
-                Firstname
-                <input type="text" name="first-name">
-            </label><br>
-            <label>
-                Lastname
-                <input type="text" name="last-name">
-            </label><br>
-            <button type="submit" hx-post="/register" hx-swap="outerHTML" hx-target="#login-register">
-                Submit
-            </button>
+            <label>Username<input type="text" name="username"></label>
+            <br>
+            <label>Password<input type="password" name="password"></label>
+            <br>
+            <label>Repeat password<input type="password" name="password-repeat"></label>
+            <br>
+            <label>Firstname<input type="text" name="firstname"></label>
+            <br>
+            <label>Lastname<input type="text" name="lastname"></label>
+            <br>
+            <input type="submit" value="Register">
         </form>
     </div>
+    <br><br><br><br>
+
+    {% with messages = get_flashed_messages() %}
+        {% if messages %}
+            <ul>
+                {% for message in messages %}
+                    <li style="color: red;">{{ message }}</li>
+                {% endfor %}
+            </ul>
+        {% endif %}
+    {% endwith %}
 </div>
 
 <footer>

@@ -6,14 +6,8 @@ from string import ascii_letters, digits
 import pyscrypt
 from flask_login import UserMixin
 from flask_sqlalchemy import SQLAlchemy
-from sqlalchemy.orm import DeclarativeBase
 
-
-# class Base(DeclarativeBase):
-#     pass
-
-
-db = SQLAlchemy(disable_autonaming=True) # model_class=Base)
+db = SQLAlchemy(disable_autonaming=True)  # model_class=Base)
 
 PEPPER = os.environ.get("PEPPER", "VERY_SECRET_AND_COMPLEX_PEPPER")
 
@@ -25,16 +19,19 @@ class User(UserMixin, db.Model):
     first_name = db.Column(db.String(), nullable=False)
     last_name = db.Column(db.String(), nullable=False)
     password = db.Column(db.String(), nullable=False)
-    salt = db.Column(db.String(), nullable=False)
+    salt = db.Column(db.String(16), nullable=False)
     recovery_password = db.Column(db.String(), nullable=False)
 
     def __init__(self, username, first_name, last_name, password):
         self.username = username
         self.first_name = first_name
         self.last_name = last_name
-        self.password = password
         self.salt = secrets.token_hex(16)
+        self.password = hash_password(password, self.salt)
         self.recovery_password = "".join([secrets.choice(ascii_letters + digits) for _ in range(16)])
+
+    def get_id(self):
+        return str(self.username)
 
     def add_to_db(self):
         db.session.add(self)
