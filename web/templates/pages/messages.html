@@ -3,6 +3,16 @@
 {% block content %}
     <h4>Messages</h4>
 
+    {% if notifications %}
+    {% for notification in notifications %}
+        <div class="notification">
+            <p>{{ notification['message'] }}</p>
+            <button>Accept</button>
+            <button>Decline</button>
+        </div>
+    {% endfor %}
+    {% endif %}
+
     <table>
         <tr>
             <th>Priority</th>
