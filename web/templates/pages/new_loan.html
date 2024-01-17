@@ -1,0 +1,28 @@
+{% extends "layout.html" %}
+
+{% block content %}
+
+    <h4>New loan</h4>
+
+    <form method="post" action="{{ url_for('new_loan') }}">
+        <label for="borrower">Borrower's username</label>
+        <input type="text" name="borrower" id="borrower">
+        <label for="amount">How much</label>
+        <input type="number" step="0.01" name="amount" id="amount">
+        <label for="deadline">Deadline</label>
+        <input type="date" name="deadline" id="deadline">
+
+        <input type="submit" value="Submit">
+    </form>
+
+    {% with messages = get_flashed_messages() %}
+        {% if messages %}
+            <ul>
+                {% for message in messages %}
+                    <li style="color: red;">{{ message }}</li>
+                {% endfor %}
+            </ul>
+        {% endif %}
+    {% endwith %}
+
+{% endblock %}

@@ -1,0 +1,10 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div id="container">
+        <h4>Hi {{ user.first_name }}</h4>
+        <div id="target" hx-get="/summary"
+            hx-target="#target" hx-trigger="load"
+            ></div>
+    </div>
+{% endblock %}

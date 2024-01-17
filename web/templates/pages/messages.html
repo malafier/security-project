@@ -1,0 +1,21 @@
+{% extends "layout.html" %}
+
+{% block content %}
+    <h4>Messages</h4>
+
+    <table>
+        <tr>
+            <th>Priority</th>
+            <th>Date</th>
+            <th>Message</th>
+        </tr>
+    {% for message in messages %}
+        <tr>
+            <td></td>
+            <td></td>
+            <td></td>
+        </tr>
+    {% endfor %}
+    </table>
+
+{% endblock %}

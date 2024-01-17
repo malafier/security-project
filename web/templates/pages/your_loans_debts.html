@@ -1,0 +1,58 @@
+{% extends "layout.html" %}
+
+{% block content %}
+    <h4>Your loans</h4>
+
+    {% if loans %}
+        <table>
+            <tr>
+                <th>Lender</th>
+                <th>Amount</th>
+                <th>Deadline</th>
+                <th>Status</th>
+            </tr>
+        {% for loan in loans %}
+            <tr>
+                <td>{{ loan.lender }}</td>
+                <td>{{ loan.amount }}</td>
+                <td
+                        {% if loan.deadline < datetime.now() and loan.status == "not_payed" %}
+                            style="color: red"
+                        {% endif %}
+                >{{ loan.deadline }}</td>
+                <td>{{ loan.status }}</td>
+            </tr>
+        {% endfor %}
+        </table>
+    {% else %}
+        <p>No loans</p>
+    {% endif %}
+
+    <h4>Your debt</h4>
+
+    {% if debts %}
+        <table>
+            <tr>
+                <th>Borrower</th>
+                <th>Amount</th>
+                <th>Deadline</th>
+                <th>Status</th>
+                <th>Action</th>
+            </tr>
+        {% for debt in debts %}
+            <tr>
+                <td>{{ debt.borrower }}</td>
+                <td>{{ debt.amount }}</td>
+                <td>{{ debt.deadline }}</td>
+                <td>{{ debt.status }}</td>
+                <td>
+                    <button>Repay</button>
+                </td>
+            </tr>
+        {% endfor %}
+        </table>
+    {% else %}
+        <p>No debts</p>
+    {% endif %}
+
+{% endblock %}

@@ -1,0 +1,14 @@
+{% extends "layout.html" %}
+
+{% block content %}
+
+    <h4>Search for others' loans</h4>
+
+    <label for="search">Search for:</label>
+    <input type="search" name="search" id="search" autofocus placeholder="Search"
+                hx-post="/loans" hx-target="#search-results"
+                hx-trigger="input changed delay:500ms, search">
+
+    <div id="search-results"></div>
+
+{% endblock %}

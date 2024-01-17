@@ -51,12 +51,14 @@ class Loan(db.Model):
     borrower_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
     amount = db.Column(db.Float, nullable=False)
     deadline = db.Column(db.Date(), nullable=False)
+    status_id = db.Column(db.Integer, db.ForeignKey('loan_satus.id'), nullable=False)
 
     def __init__(self, lender_id, borrower_id, amount, deadline):
         self.lender_id = lender_id
         self.borrower_id = borrower_id
         self.amount = amount
         self.deadline = deadline
+        self.status_id = 1
 
     def add_to_db(self):
         db.session.add(self)
