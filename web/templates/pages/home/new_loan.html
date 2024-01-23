@@ -1,16 +1,16 @@
-{% extends "layout.html" %}
+{% extends "home_layout.html" %}
 
 {% block content %}
 
     <h4>New loan</h4>
 
     <form method="post" action="{{ url_for('new_loan') }}">
-        <label for="borrower">Borrower's username</label>
-        <input type="text" name="borrower" id="borrower">
+        <label for="lender">Lender's username</label>
+        <input type="text" name="lender" id="lender"><br/><br/>
         <label for="amount">How much</label>
-        <input type="number" step="0.01" name="amount" id="amount">
+        <input type="number" step="0.01" name="amount" id="amount"><br/><br/>
         <label for="deadline">Deadline</label>
-        <input type="date" name="deadline" id="deadline">
+        <input type="date" name="deadline" id="deadline"><br/><br/>
 
         <input type="submit" value="Submit">
     </form>

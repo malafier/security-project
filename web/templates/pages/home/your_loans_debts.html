@@ -1,4 +1,4 @@
-{% extends "layout.html" %}
+{% extends "home_layout.html" %}
 
 {% block content %}
     <h4>Your loans</h4>
@@ -16,10 +16,12 @@
                 <td>{{ loan.lender }}</td>
                 <td>{{ loan.amount }}</td>
                 <td
-                        {% if loan.deadline < datetime.now() and loan.status == "not_payed" %}
+                        {% if loan.deadline < current_date and loan.status == "not_payed" %}
                             style="color: red"
                         {% endif %}
-                >{{ loan.deadline }}</td>
+                >
+                    {{ loan.deadline }}
+                </td>
                 <td>{{ loan.status }}</td>
             </tr>
         {% endfor %}

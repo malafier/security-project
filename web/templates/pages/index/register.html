@@ -1,0 +1,30 @@
+{% extends "index.html" %}
+
+{% block content %}
+    <div class="register">
+        <form method="post" action="{{ url_for('register') }}">
+            Register
+            <label>Username<input type="text" name="username"></label>
+            <br>
+            <label>Password<input type="password" name="password"></label>
+            <br>
+            <label>Repeat password<input type="password" name="password-repeat"></label>
+            <br>
+            <label>Firstname<input type="text" name="firstname"></label>
+            <br>
+            <label>Lastname<input type="text" name="lastname"></label>
+            <br>
+            <input type="submit" value="Register">
+        </form>
+
+        {% with messages = get_flashed_messages() %}
+            {% if messages %}
+                <ul>
+                    {% for message in messages %}
+                        <li style="color: red;">{{ message }}</li>
+                    {% endfor %}
+                </ul>
+            {% endif %}
+        {% endwith %}
+    </div>
+{% endblock %}

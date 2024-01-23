@@ -3,8 +3,13 @@ from datetime import timedelta, datetime
 
 from flask import Flask, render_template, request, redirect, flash, url_for
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
+from user_agents import parse
 
-from models import db, User, Loan, hash_password
+from web.models.db_init import db
+from web.models.loan_models import Loan, LoanMessage, Notification
+from web.models.user_models import User, LoginLog
+from web.models.model_handler import search_users, get_all_loans, get_all_debts, loans_given, loans_taken, compare_logins
+from security_utils import hash_password
 
 # app
 app = Flask(__name__)
@@ -14,7 +19,7 @@ db.init_app(app)
 with app.app_context():
     db.create_all()
 
-# login manager
+# index manager
 login_manager = LoginManager(app)
 login_manager.login_view = "hello_world"
 
@@ -29,41 +34,59 @@ def hello_world():
     return render_template("index.html")
 
 
-@app.route("/login", methods=["POST"])
+@app.route("/login", methods=["GET", "POST"])
 def login():
-    username = request.form["username"]
-    password = request.form["password"]
-    user = load_user(username)
-    if not user or hash_password(password, user.salt) != user.password:
-        flash("Login unsuccessful. Please check your username and password.", "danger")
-        return render_template("index.html")
+    if request.method == "GET":
+        return render_template("pages/index/login.html")
+    if request.method == "POST":
+        username = request.form["username"]
+        password = request.form["password"]
+        user = load_user(username)
+        if not user or hash_password(password, user.salt) != user.password:
+            flash("Login unsuccessful. Please check your username and password.", "danger")
+            return render_template("index.html")
+        login_user(user)
 
-    login_user(user)
-    return redirect(url_for("home"))
+        user_agent = parse(request.headers.get('User-Agent'))
+        last_login = user.last_login()
+        current_login = LoginLog(user.id, user_agent)
+        compare_logins(last_login, current_login, user)
+        current_login.add_to_db()
+
+        return redirect(url_for("home"))
 
 
-@app.route("/home", methods=["GET"])
-@login_required
-def home():
-    return render_template("pages/home.html", user=current_user)
-
-
-@app.route("/register", methods=["POST"])
+@app.route("/register", methods=["GET", "POST"])
 def register():
-    username = request.form["username"]
-    password = request.form["password"]
-    second_password = request.form["password-repeat"]
-    first_name, last_name = request.form["firstname"], request.form["lastname"]
+    if request.method == "GET":
+        return render_template("pages/index/register.html")
+    if request.method == "POST":
+        username = request.form["username"]
+        password = request.form["password"]
+        second_password = request.form["password-repeat"]
+        first_name, last_name = request.form["firstname"], request.form["lastname"]
 
-    if password != second_password or User.query.filter_by(username=username).first():
-        flash("Register unsuccessful.", "danger")
-        return render_template("index.html")
+        if password != second_password or User.query.filter_by(username=username).first():
+            flash("Register unsuccessful.", "danger")
+            return render_template("index.html")
 
-    user = User(username, first_name, last_name, password)
-    user.add_to_db()
-    login_user(user, duration=timedelta(hours=1))
-    return render_template("snippets/recovery_password.html", user=user), 201
+        user = User(username, first_name, last_name, password)
+        user.add_to_db()
+        login_user(user, duration=timedelta(hours=1))
+        return render_template("pages/index/recovery_password.html", user=user), 201
 
+
+@app.route("/recover", methods=["GET", "POST"])
+def recover():
+    if request.method == "GET":
+        return render_template("pages/index/recover_password.html")
+    if request.method == "POST":
+        username = request.form["username"]
+        user = User.query.filter_by(username=username).first()
+        if not user:
+            flash("No such user.", "danger")
+            return render_template("pages/index/recover_password.html")
+        return render_template("pages/index/login.html", user=user)
 
 @app.route("/logout")
 @login_required
@@ -72,175 +95,145 @@ def logout():
     return redirect(url_for("hello_world"))
 
 
-@app.route("/summary", methods=["GET"])
+@app.route("/home", methods=["GET"])
 @login_required
-def summary():
-    loans_given = Loan.query.filter_by(lender_id=current_user.id).all()
-    loans_taken = Loan.query.filter_by(borrower_id=current_user.id).all()
-    return render_template("snippets/user_summary.html", loans_given=loans_given, loans_taken=loans_taken)
+def home():
+    loans = loans_given(current_user)
+    debts = loans_taken(current_user)
+    return render_template("pages/home/home.html", user=current_user, loans_given=loans, loans_taken=debts)
+
+
+@app.route("/messages")
+@login_required
+def messages():
+    messages = LoanMessage.query.filter_by(receiver_id=current_user.id).all()
+    notifications = Notification.query.filter_by(receiver_id=current_user.id).all()
+    return render_template("pages/home/messages.html", messages=messages, notifications=notifications)
 
 
 @app.route("/new-loan", methods=["GET", "POST"])
 @login_required
 def new_loan():
     if request.method == "GET":
-        return render_template("pages/new_loan.html")
+        return render_template("pages/home/new_loan.html")
     if request.method == "POST":
-        borrower = User.query.filter_by(username=request.form["borrower"]).first()
-        if not borrower:
+        lender = User.query.filter_by(username=request.form["lender"]).first()
+        if not lender:
             flash("No such user.", "danger")
-            return render_template("pages/new_loan.html")
+            return render_template("pages/home/new_loan.html")
 
         deadline = datetime.strptime(request.form["deadline"], "%Y-%m-%d")
-        loan = Loan(current_user.id, borrower.id, request.form["amount"], deadline)
+        loan = Loan(lender.id, current_user.id, request.form["amount"], deadline)
         loan.add_to_db()
-        return redirect("home")
+
+        return redirect(url_for("home"))
     return redirect(url_for("home"))
 
 
-@app.route("/new-loan/<int:id>/accept", methods=["POST"])
+@app.route("/new-loan/<int:id>/accept", methods=["PATCH"])
 @login_required
 def accept_loan():
     loan = Loan.query.filter_by(id=id).first()
     if not loan:
         flash("No such loan.", "danger")
-        return render_template("pages/new_loan.html")
+        return render_template("pages/home/new_loan.html")
 
-    loan.status_id = 2
-    loan.commit()
+    loan.accept_request()
     return redirect(url_for("home"))
 
 
-@app.route("/new-loan/<int:id>/reject", methods=["POST"])
+@app.route("/new-loan/<int:id>/reject", methods=["PATCH"])
 @login_required
 def reject_loan():
     loan = Loan.query.filter_by(id=id).first()
     if not loan:
         flash("No such loan.", "danger")
-        return render_template("pages/new_loan.html")
+        return render_template("pages/home/new_loan.html")
 
-    loan.status_id = 5
-    loan.commit()
-    return redirect(url_for("home"))
-
-
-@app.route("/loan/<int:id>/repay", methods=["POST"])
-@login_required
-def repay_loan():
-    loan = Loan.query.filter_by(id=id).first()
-    if not loan:
-        flash("No such loan.", "danger")
-        return render_template("pages/your_loans_debts.html")
-
-    loan.status_id = 3
-    loan.commit()
-    return redirect(url_for("home"))
-
-
-@app.route("/loan/<int:id>/reject", methods=["POST"])
-@login_required
-def reject_repayment():
-    loan = Loan.query.filter_by(id=id).first()
-    if not loan:
-        flash("No such loan.", "danger")
-        return render_template("pages/your_loans_debts.html")
-
-    loan.status_id = 2
-    loan.commit()
-    return redirect(url_for("home"))
-
-
-@app.route("/loan/<int:id>/accept", methods=["POST"])
-@login_required
-def accept_repayment():
-    loan = Loan.query.filter_by(id=id).first()
-    if not loan:
-        flash("No such loan.", "danger")
-        return render_template("pages/your_loans_debts.html")
-
-    loan.status_id = 4
-    loan.commit()
-    return redirect(url_for("home"))
-
-
-@app.route("/settings", methods=["GET", "POST"])
-@login_required
-def settings():
-    if request.method == "GET":
-        return render_template("pages/settings.html")
-    if request.method == "POST":
-        first_name, last_name = request.form["first-name"], request.form["last-name"]
-
-        if not first_name or not last_name:
-            flash("First name or last name cannot be empty.", "danger")
-            return render_template("pages/settings.html")
-
-        if current_user.first_name == first_name and current_user.last_name == last_name:
-            flash("Nothing to change.", "info")
-            return render_template("pages/settings.html")
-
-        current_user.first_name = first_name
-        current_user.last_name = last_name
-        db.session.commit()
-        flash("Name changed successfully.", "success")
-        return render_template("pages/settings.html", success=True)
-    return redirect(url_for("home"))
-
-
-@app.route("/change-password", methods=["POST"])
-@login_required
-def change_password():
-    old_password = request.form["password"]
-    new_password = request.form["new-password"]
-    second_new_password = request.form["new-password-repeat"]
-
-    if new_password != second_new_password or hash_password(old_password, current_user.salt) != current_user.password:
-        flash("Passwords do not match.", "danger")
-        return render_template("pages/settings.html")
-
-    current_user.password = hash_password(new_password, current_user.salt)
-    db.session.commit()
-    flash("Password changed successfully.", "success")
-    return render_template("pages/settings.html", success=True)
-
-
-@app.route("/messages")
-@login_required
-def messages():
-    #  user = current_user
-    return 501  # render_template("snippets/messages.html")
-
-
-@app.route("/logs")
-@login_required
-def logs():
-    return 501
-
-
-@app.route("/other-loans", methods=["GET", "POST"])
-@login_required
-def other_loans():
-    if request.method == "GET":
-        loans = Loan.query.filter_by(borrower_id=current_user.id).all()
-        return render_template("pages/other_loans.html", loans=loans)
-    if request.method == "POST":
-        loan_id = request.form["loan-id"]
-        loan = Loan.query.filter_by(id=loan_id).first()
-        if not loan:
-            flash("No such loan.", "danger")
-            return render_template("pages/other_loans.html")
-
-        loan.delete_from_db()
-        return redirect(url_for("loans"))
+    loan.reject_request()
     return redirect(url_for("home"))
 
 
 @app.route("/loans")
 @login_required
 def loans():
-    loans = Loan.query.filter_by(lender_id=current_user.id).all()
-    debts = Loan.query.filter_by(borrower_id=current_user.id).all()
-    return render_template("pages/your_loans_debts.html", loans=loans, debts=debts)
+    loans = get_all_loans(current_user)
+    debts = get_all_debts(current_user)
+    return render_template("pages/home/your_loans_debts.html", loans=loans, debts=debts, current_date=datetime.now())
+
+
+@app.route("/loans/<int:id>/repay", methods=["POST"])
+@login_required
+def repay_loan():
+    loan = Loan.query.filter_by(id=id).first()
+    if not loan:
+        flash("No such loan.", "danger")
+        return render_template("pages/home/your_loans_debts.html")
+
+    loan.pay_back()
+    return redirect(url_for("home"))
+
+
+@app.route("/loans/<int:id>/reject", methods=["POST"])
+@login_required
+def reject_repayment():
+    loan = Loan.query.filter_by(id=id).first()
+    if not loan:
+        flash("No such loan.", "danger")
+        return render_template("pages/home/your_loans_debts.html")
+
+    loan.reject_repayment()
+    return redirect(url_for("home"))
+
+
+@app.route("/loans/<int:id>/accept", methods=["POST"])
+@login_required
+def accept_repayment():
+    loan = Loan.query.filter_by(id=id).first()
+    if not loan:
+        flash("No such loan.", "danger")
+        return render_template("pages/home/your_loans_debts.html")
+
+    loan.confirm_repayment()
+    return redirect(url_for("home"))
+
+
+@app.route("/other-loans", methods=["GET", "POST"])
+@login_required
+def other_loans():
+    if request.method == "POST":
+        search_req = request.form["search"]
+        search_results = search_users(search_req)
+        return render_template("snippets/search_results.html", users=search_results)
+    return render_template("pages/home/other_loans.html")
+
+
+@app.route("/profile", methods=["GET", "POST"])
+@login_required
+def profile():
+    if request.method == "GET":
+        return render_template("pages/home/profile.html", user=current_user)
+    if request.method == "POST":    # change password
+        old_password = request.form["password"]
+        new_password = request.form["new-password"]
+        second_new_password = request.form["new-password-repeat"]
+
+        if new_password != second_new_password or hash_password(old_password,
+                                                                current_user.salt) != current_user.password:
+            flash("Passwords do not match.", "danger")
+            return render_template("pages/home/profile.html")
+
+        current_user.password = hash_password(new_password, current_user.salt)
+        db.session.commit()
+        flash("Password changed successfully.", "success")
+        return render_template("pages/home/profile.html", user=current_user)
+    return redirect(url_for("home"))
+
+
+@app.route("/logs")
+@login_required
+def logs():
+    return redirect(url_for("home")), 501
 
 
 if __name__ == "__main__":

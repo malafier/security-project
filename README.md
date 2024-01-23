@@ -20,3 +20,16 @@ Prosta aplikację do ewidencji pożyczek. -- Jest grupa użytkowników, którzy 
 ### Użyte algorytmy i rozwiązania
 
 - Hashowanie hasła: algorytm [scrypt](https://cryptobook.nakov.com/mac-and-key-derivation/scrypt)
+- Do sprawdzania odporności został użyty słownik z repozutorium [SecLists](https://github.com/danielmiessler/SecLists/blob/master/Passwords/500-worst-passwords.txt)
+
+
+#### Model bazy danych
+
+![Model bazy danych]()
+
+
+#### Diagram stanów pożyczki
+
+![Diagram stanów pożyczki]()
+
+✓✕

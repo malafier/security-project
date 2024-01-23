@@ -1,14 +1,14 @@
-{% extends "layout.html" %}
+{% extends "home_layout.html" %}
 
 {% block content %}
     <h4>Messages</h4>
 
-    {% if notifications %}
-    {% for notification in notifications %}
+    {% if messages %}
+    {% for message in messages %}
         <div class="notification">
-            <p>{{ notification['message'] }}</p>
-            <button>Accept</button>
-            <button>Decline</button>
+            <p>{{ message.message }}</p>
+            <button hx-swap="none">Accept</button>
+            <button hx-swap="none">Decline</button>
         </div>
     {% endfor %}
     {% endif %}
@@ -19,7 +19,7 @@
             <th>Date</th>
             <th>Message</th>
         </tr>
-    {% for message in messages %}
+    {% for notification in notifications %}
         <tr>
             <td></td>
             <td></td>

@@ -3,21 +3,18 @@
 <head>
     <meta charset="UTF-8">
     <title>Ala ma długi</title>
-    <script src="https://unpkg.com/htmx.org@1.9.10"></script>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
-<body>
-
-<h1>Ala ma długi</h1>
+<body style="height: 100vh;">
 
 {% include "snippets/_navbar.html" %}
 
-<main>
+<main class="responsive-table__container">
     {% block content %} {% endblock %}
 </main>
 
 <footer>
-    Wszystkie prawa zastrzeżone, itp. itd.
+    All rights reserved &copy; etc. etc.
 </footer>
 
 </body>

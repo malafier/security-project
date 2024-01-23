@@ -14,3 +14,4 @@ Werkzeug==3.0.1
 zipp==3.17.0
 
 pyscrypt~=1.6.2
+user_agents~=2.2.0

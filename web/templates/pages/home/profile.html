@@ -1,20 +1,14 @@
-{% extends "layout.html" %}
+{% extends "home_layout.html" %}
 
 {% block content %}
 
     <h4>Your account</h4>
-    <form>
-        <label for="firstname">Firstname</label>
-        <input type="text" name="first-name" id="firstname" value="{{ user.first_name }}">
-
-        <label for="lastname">Lastname</label>
-        <input type="text" name="lastname" id="lastname" value="{{ user.last_name }}">
-
-        <input type="submit" value="Change settings">
-    </form>
+    <p>Username: {{ user.username }}</p>
+    <p>Firstname: {{ user.first_name }}</p>
+    <p>Lastname: {{ user.last_name }}</p>
 
     <h4>Change password</h4>
-    <form method="post" action="{{ url_for('change_password') }}">
+    <form method="post" action="{{ url_for('profile') }}">
         <label for="old-password">Old password</label>
         <input type="password" name="old-password" id="old-password">
 

@@ -3,59 +3,22 @@
 <head>
     <meta charset="UTF-8">
     <title>Ala ma długi</title>
-    <script src="https://unpkg.com/htmx.org@1.9.10"></script>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/index.css') }}">
 </head>
 <body>
 
-<h1>Ala ma długi</h1>
-<p>Strona do zarządzania należnościami ze swoimi znajomymi</p>
+<main>
+    <h1>Ala ma długi</h1>
+    <p>Page for managing dues with your friends.</p>
 
-<div id="login-register">
-    <div class="login">
-        <form method="post" action="{{ url_for('login') }}">
-            Zaloguj się
-            <label>Username<input type="text" name="username" id="username" required></label>
-            <br>
-            <label>Password<input type="password" name="password" id="password" required></label>
-            <br>
-            <input type="submit" value="Login">
-        </form>
-        <a href="foo">Zapomniałem hasła</a>
-    </div>
-    <br><br><br><br>
-
-    <div class="register">
-        <form method="post" action="{{ url_for('register') }}">
-            Zarejestruj się
-            <label>Username<input type="text" name="username"></label>
-            <br>
-            <label>Password<input type="password" name="password"></label>
-            <br>
-            <label>Repeat password<input type="password" name="password-repeat"></label>
-            <br>
-            <label>Firstname<input type="text" name="firstname"></label>
-            <br>
-            <label>Lastname<input type="text" name="lastname"></label>
-            <br>
-            <input type="submit" value="Register">
-        </form>
-    </div>
-    <br><br><br><br>
-
-    {% with messages = get_flashed_messages() %}
-        {% if messages %}
-            <ul>
-                {% for message in messages %}
-                    <li style="color: red;">{{ message }}</li>
-                {% endfor %}
-            </ul>
-        {% endif %}
-    {% endwith %}
-</div>
+        {% block content %}
+            <button class="button" onclick="window.location.href='/index'">Log in</button>
+            <button class="button" onclick="window.location.href='/register'">Sign up</button>
+        {% endblock %}
+</main>
 
 <footer>
-    Wszystkie prawa zastrzeżone, itp. itd.
+    All rights reserved &copy; etc. etc.
 </footer>
 
 </body>

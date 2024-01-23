@@ -1,5 +1,6 @@
 <nav>
-    {% for menu_item in ["home", "messages", "new loan", "loans", "other loans", "settings", "logs", "logout"] %}
+    <h1>Ala ma długi</h1>
+    {% for menu_item in ["home", "messages", "new loan", "loans", "other loans", "profile", "logs", "logout"] %}
         <a href="{{ url_for(menu_item.replace(' ', '_')) }}">{{ menu_item }}</a>
     {% endfor %}
 </nav>
