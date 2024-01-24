@@ -207,14 +207,14 @@ def profile():
     if request.method == "GET":
         return render_template("pages/home/profile.html", user=current_user)
     if request.method == "POST":    # change password
-        old_password = request.form["password"]
+        old_password = request.form["old-password"]
         new_password = request.form["new-password"]
         second_new_password = request.form["new-password-repeat"]
 
         if new_password != second_new_password or hash_password(old_password,
                                                                 current_user.salt) != current_user.password:
-            flash("Passwords do not match.", "danger")
-            return render_template("pages/home/profile.html")
+            flash("Passwords do not match.", "error")
+            return render_template("pages/home/profile.html", user=current_user)
 
         current_user.password = hash_password(new_password, current_user.salt)
         db.session.commit()

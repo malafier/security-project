@@ -7,7 +7,7 @@ Prosta aplikację do ewidencji pożyczek. -- Jest grupa użytkowników, którzy 
 - **(niezbędne)** restrykcyjna walidacja danych pochodzących z formularza login-hasło,
 - ✓ **(niezbędne)** przechowywanie hasła chronione funkcją hash, solą i pieprzem, key-streching
 - **(niezbędne)** zabezpieczenie transmisji poprzez wykorzystanie protokołu https,
-- **(niezbędne)** możliwość zmiany hasła,
+- ✓ **(niezbędne)** możliwość zmiany hasła,
 - **(niezbędne)** możliwość odzyskania dostępu w przypadku utraty hasła,
 - ✓ **(niezbędne)** rejestrowanie nowych pożyczek i podgląd zapisanych danych,
 - dodatkowa kontrola spójności sesji (przeciw atakom XSRF),
@@ -32,4 +32,4 @@ Prosta aplikację do ewidencji pożyczek. -- Jest grupa użytkowników, którzy 
 
 ![Diagram stanów pożyczki]()
 
-✓✕
+✕
