@@ -1,17 +1,16 @@
 import os
-import secrets
 from datetime import timedelta, datetime, date
 
 from flask import Flask, render_template, request, redirect, flash, url_for
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
 from user_agents import parse
 
+import security_utils as su
 from web.models.db_init import db
-from web.models.loan_models import Loan, LoanMessage, Notification, LoanLog, NotificationType
-from web.models.user_models import User, LoginLog, LoginMonitor
+from web.models.loan_models import Loan, LoanMessage, Notification, NotificationType
 from web.models.model_handler import search_users, get_all_loans, get_all_debts, loans_given, loans_taken, \
     compare_logins, get_logs
-import security_utils as su
+from web.models.user_models import User, LoginLog, LoginMonitor
 
 # app
 app = Flask(__name__)
