@@ -81,7 +81,7 @@ fabric.properties
 ### Example user template
 
 # IntelliJ project files
-.idea
+../.idea
 *.iml
 out
 gen
@@ -89,7 +89,7 @@ gen
 instance/*
 !instance/.gitignore
 .webassets-cache
-.env
+service/.env
 
 ### Python template
 # Byte-compiled / optimized / DLL files
@@ -214,7 +214,7 @@ celerybeat.pid
 *.sage.py
 
 # Environments
-.env
+service/.env
 .venv
 env/
 venv/

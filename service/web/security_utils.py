@@ -53,7 +53,7 @@ def registration_data_is_valid(username, first_name, last_name, password, second
     if not validate_password(password):
         flash("Password must be between 8 and 64 characters long and must contain at least one letter, one digit and one special character.", "danger")
         return False
-    if password == second_password:
+    if password != second_password:
         flash("Passwords do not match.", "danger")
         return False
     if in_dictionary(password):

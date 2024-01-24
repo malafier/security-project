@@ -1,7 +1,4 @@
-from datetime import datetime
-from enum import Enum
-
-from sqlalchemy import func, or_, case, and_
+from sqlalchemy import func, or_
 
 from web.models.db_init import db
 from web.models.user_models import User, LoginLog

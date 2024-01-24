@@ -15,3 +15,4 @@ zipp==3.17.0
 
 pyscrypt~=1.6.2
 user_agents~=2.2.0
+gunicorn~=21.2.0
