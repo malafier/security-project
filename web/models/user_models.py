@@ -35,6 +35,11 @@ class User(UserMixin, db.Model):
     def last_login(self):
         return LoginLog.query.filter_by(user_id=self.id).order_by(LoginLog.timestamp.desc()).first()
 
+    def recover(self, new_password):
+        self.password = hash_password(new_password, self.salt)
+        self.recovery_password = "".join([secrets.choice(ascii_letters + digits) for _ in range(16)])
+        db.session.commit()
+
 
 class LoginLog(db.Model):
     __tablename__ = 'login_logs'

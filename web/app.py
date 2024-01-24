@@ -1,4 +1,5 @@
 import os
+import secrets
 from datetime import timedelta, datetime, date
 
 from flask import Flask, render_template, request, redirect, flash, url_for
@@ -74,7 +75,7 @@ def register():
         user = User(username, first_name, last_name, password)
         user.add_to_db()
         login_user(user, duration=timedelta(hours=1))
-        return render_template("pages/index/recovery_password.html", user=user), 201
+        return render_template("pages/index/recovery_password.html", user=user, new_acount=True), 201
 
 
 @app.route("/recover", methods=["GET", "POST"])
@@ -84,10 +85,22 @@ def recover():
     if request.method == "POST":
         username = request.form["username"]
         user = User.query.filter_by(username=username).first()
+        recovery_password = request.form["recovery-password"]
+        new_password, repeat_new_password = request.form["new-password"], request.form["repeat-new-password"]
         if not user:
             flash("No such user.", "danger")
             return render_template("pages/index/recover_password.html")
-        return render_template("pages/index/login.html", user=user)
+
+        if user.recovery_password != recovery_password:
+            flash("Incorrect recovery password.", "danger")
+            return render_template("pages/index/recover_password.html")
+        if new_password != repeat_new_password:
+            flash("Passwords don't match.", "danger")
+            return render_template("pages/index/recover_password.html")
+
+        user.recover(new_password)
+        login_user(user)
+        return render_template("pages/index/recovery_password.html", user=user, new_account=False)
 
 
 @app.route("/logout")
