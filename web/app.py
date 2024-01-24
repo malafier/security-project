@@ -7,8 +7,8 @@ from flask_login import LoginManager, login_user, logout_user, login_required, c
 from user_agents import parse
 
 from web.models.db_init import db
-from web.models.loan_models import Loan, LoanMessage, Notification, LoanLog
-from web.models.user_models import User, LoginLog
+from web.models.loan_models import Loan, LoanMessage, Notification, LoanLog, NotificationType
+from web.models.user_models import User, LoginLog, LoginMonitor
 from web.models.model_handler import search_users, get_all_loans, get_all_debts, loans_given, loans_taken, \
     compare_logins, get_logs
 from security_utils import hash_password
@@ -44,9 +44,14 @@ def login():
         username = request.form["username"]
         password = request.form["password"]
         user = load_user(username)
-        if not user or hash_password(password, user.salt) != user.password:
+        if not user:
             flash("Login unsuccessful. Please check your username and password.", "danger")
-            return render_template("index.html")
+            return render_template("pages/index/login.html")
+        if hash_password(password, user.salt) != user.password:
+            flash("Login unsuccessful. Please check your username and password.", "danger")
+            login_monitor = LoginMonitor.query.filter_by(user_id=user.id).first()
+            login_monitor.update()
+            return render_template("pages/index/login.html")
         login_user(user)
 
         user_agent = parse(request.headers.get('User-Agent'))
@@ -54,6 +59,15 @@ def login():
         current_login = LoginLog(user.id, user_agent)
         compare_logins(last_login, current_login, user)
         current_login.add_to_db()
+
+        login_monitor = LoginMonitor.query.filter_by(user_id=user.id).first()
+        if not login_monitor:
+            login_monitor = LoginMonitor(user.id, date.today(), 0)
+            login_monitor.add_to_db()
+        if login_monitor.login_count >= 3:
+            notification = Notification(user.id, NotificationType.FAILED_LOGINS, login_monitor=login_monitor)
+            notification.add_to_db()
+        login_monitor.reset()
 
         return redirect(url_for("home"))
 

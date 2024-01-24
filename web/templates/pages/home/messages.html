@@ -22,15 +22,13 @@
         <h4>Notifications</h4>
         <table>
             <tr>
-                <th>Priority</th>
                 <th>Date</th>
                 <th>Message</th>
             </tr>
             {% for notification in notifications %}
                 <tr>
-                    <td></td>
-                    <td></td>
-                    <td></td>
+                    <td>{{ notification.timestamp }}</td>
+                    <td>{{ notification.message }}</td>
                 </tr>
             {% endfor %}
         </table>

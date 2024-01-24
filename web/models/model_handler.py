@@ -1,6 +1,6 @@
 from enum import Enum
 
-from sqlalchemy import func, or_
+from sqlalchemy import func, or_, case
 
 from web.models.db_init import db
 from web.models.user_models import User, LoginLog
@@ -34,21 +34,15 @@ def search_users(search_string):
             User.username,
             func.concat(User.first_name, ' ', User.last_name).label('full_name'),
             func.sum(
-                db.case(
-                    [
-                        (Loan.status.in_([LoanStatus.NOT_PAYED.value, LoanStatus.PENDING.value]),
-                         db.case([(Loan.deadline >= func.current_date(), Loan.amount)], else_=0))
-                    ],
-                    else_=0
+                case(
+                    (Loan.status.in_([LoanStatus.NOT_PAYED.value, LoanStatus.PENDING.value]),
+                     case([(Loan.deadline >= func.current_date(), Loan.amount)], else_=0))
                 )
             ).label('green_debt'),
             func.sum(
-                db.case(
-                    [
-                        (Loan.status.in_([LoanStatus.NOT_PAYED.value, LoanStatus.PENDING.value]),
-                         db.case([(Loan.deadline < func.current_date(), Loan.amount)], else_=0))
-                    ],
-                    else_=0
+                case(
+                    (Loan.status.in_([LoanStatus.NOT_PAYED.value, LoanStatus.PENDING.value]),
+                     case([(Loan.deadline < func.current_date(), Loan.amount)], else_=0))
                 )
             ).label('red_debt')
         )

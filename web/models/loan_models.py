@@ -2,7 +2,7 @@ from datetime import datetime
 from enum import Enum
 
 from web.models.db_init import db
-from web.models.user_models import User
+from web.models.user_models import User, LoginMonitor
 
 
 class LoanStatus(Enum):
@@ -14,7 +14,7 @@ class LoanStatus(Enum):
 
 
 class NotificationType(Enum):
-    FAILED_LOGIN = "Someone tried to log in to your account {amount} times unsuccessfully."
+    FAILED_LOGINS = "Someone tried to log in to your account {tries} times unsuccessfully."
     LOGIN_FROM_NEW_DEVICE = "Is that you? Someone logged in to your account from a new device. Previous index was from {device_brand} {device_model} ({os_family} {os_version})."
     LOGIN_FROM_NEW_BROWSER = "Is that you? Someone logged in to your account from a new browser. Previous index was from {browser_family} {browser_version} on {os_family} {os_version}."
 
@@ -169,12 +169,12 @@ class Notification(db.Model):
     # seen = db.Column(db.Boolean, nullable=False, default=False)
     timestamp = db.Column(db.DateTime, nullable=False)
 
-    def __init__(self, receiver_id, notification_type: NotificationType, login_log=None):
+    def __init__(self, receiver_id, notification_type: NotificationType, login_log=None, login_monitor=None):
         self.receiver_id = receiver_id
         self.timestamp = datetime.now()
 
-        if notification_type == NotificationType.FAILED_LOGIN:
-            self.message = notification_type.value
+        if notification_type == NotificationType.FAILED_LOGINS:
+            self.message = notification_type.value.format(tries=login_monitor.login_count)
         elif notification_type == NotificationType.LOGIN_FROM_NEW_DEVICE:
             self.message = notification_type.value.format(device_brand=login_log.device_brand,
                                                           device_model=login_log.device_model,

@@ -1,9 +1,9 @@
 {% extends "home_layout.html" %}
 
 {% block content %}
-    <h4>Your summary</h4>
+    <h4>Hi {{ user.first_name }} this is your summary</h4>
 
-    <h5>Your debt</h5>
+    <h4>Your debt</h4>
     {% if not loans_taken %}
         <p>You don't owe anyone anything at the moment.</p>
     {% else %}
@@ -21,7 +21,7 @@
         </table>
     {% endif %}
 
-    <h5>Your loans</h5>
+    <h4>Your loans</h4>
     {% if not loans_given %}
         <p>No one ows you anything.</p>
     {% else %}

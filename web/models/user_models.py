@@ -1,5 +1,5 @@
 import secrets
-from datetime import datetime
+from datetime import datetime, date
 from string import ascii_letters, digits
 
 from flask_login import UserMixin
@@ -31,6 +31,8 @@ class User(UserMixin, db.Model):
     def add_to_db(self):
         db.session.add(self)
         db.session.commit()
+        monitor = LoginMonitor(self.id, date.today(), 0)
+        monitor.add_to_db()
 
     def last_login(self):
         return LoginLog.query.filter_by(user_id=self.id).order_by(LoginLog.timestamp.desc()).first()
@@ -75,4 +77,31 @@ class LoginLog(db.Model):
 
     def add_to_db(self):
         db.session.add(self)
+        db.session.commit()
+
+
+class LoginMonitor(db.Model):
+    __tablename__ = 'login_monitor'
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    last_login = db.Column(db.Date, nullable=False)
+    login_count = db.Column(db.Integer, nullable=False)
+
+    def __init__(self, user_id, last_login, login_count):
+        self.user_id = user_id
+        self.last_login = last_login
+        self.login_count = login_count
+
+    def add_to_db(self):
+        db.session.add(self)
+        db.session.commit()
+
+    def update(self):
+        self.last_login = date.today()
+        self.login_count += 1
+        db.session.commit()
+
+    def reset(self):
+        self.last_login = date.today()
+        self.login_count = 0
         db.session.commit()
