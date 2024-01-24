@@ -1,13 +1,21 @@
 {% extends "home_layout.html" %}
 
 {% block content %}
-    <h4>Search for others' loans</h4>
+    <h4>Others' loans</h4>
 
-    <label for="search">Search for:</label>
-    <input type="search" name="search" id="search" autofocus placeholder="Search"
-                hx-post="/other-loans" hx-target="#search-results"
-                hx-trigger="input changed delay:500ms, search">
-
-    <div id="search-results"></div>
+    <table>
+        <tr>
+            <th>Username</th>
+            <th>Name</th>
+            <th>Total debt</th>
+        </tr>
+        {% for row in users %}
+            <tr>
+                <td>{{ row.username }}</td>
+                <td>{{ row.first_name + " " + row.last_name }}</td>
+                <td>{{ row.total_debt }}</td>
+            </tr>
+        {% endfor %}
+    </table>
 
 {% endblock %}

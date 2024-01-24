@@ -1,6 +1,7 @@
+from datetime import datetime
 from enum import Enum
 
-from sqlalchemy import func, or_, case
+from sqlalchemy import func, or_, case, and_
 
 from web.models.db_init import db
 from web.models.user_models import User, LoginLog
@@ -28,31 +29,15 @@ def loans_taken(user: User):
     return query.all()
 
 
-def search_users(search_string):
-    query = (
-        db.session.query(
-            User.username,
-            func.concat(User.first_name, ' ', User.last_name).label('full_name'),
-            func.sum(
-                case(
-                    (Loan.status.in_([LoanStatus.NOT_PAYED.value, LoanStatus.PENDING.value]),
-                     case([(Loan.deadline >= func.current_date(), Loan.amount)], else_=0))
-                )
-            ).label('green_debt'),
-            func.sum(
-                case(
-                    (Loan.status.in_([LoanStatus.NOT_PAYED.value, LoanStatus.PENDING.value]),
-                     case([(Loan.deadline < func.current_date(), Loan.amount)], else_=0))
-                )
-            ).label('red_debt')
-        )
-        .join(Loan, User.id == Loan.borrower_id)
-        .filter(User.username.like(f"%{search_string}%"))
-        .filter(Loan.status.in_([LoanStatus.NOT_PAYED.value, LoanStatus.PENDING.value]),
-                Loan.deadline > func.current_date())
-        .group_by(User.id)
-    )
-    return query.all()
+def search_users():
+    user_loan_info = db.session.query(
+        User.username,
+        User.first_name,
+        User.last_name,
+        func.sum(Loan.amount).label('total_debt')
+    ).join(Loan, User.id == Loan.borrower_id).group_by(User.id).all()
+
+    return user_loan_info
 
 
 def reverse_loan_status(status):

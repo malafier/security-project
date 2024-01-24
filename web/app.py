@@ -218,14 +218,11 @@ def repay_loan(id):
     return redirect(url_for("messages"))
 
 
-@app.route("/other-loans", methods=["GET", "POST"])
+@app.route("/other-loans", methods=["GET"])
 @login_required
 def other_loans():
-    if request.method == "POST":
-        search_req = request.form["search"]
-        search_results = search_users(search_req)
-        return render_template("snippets/search_results.html", users=search_results)
-    return render_template("pages/home/other_loans.html")
+    search_results = search_users()
+    return render_template("pages/home/other_loans.html", users=search_results)
 
 
 @app.route("/profile", methods=["GET", "POST"])
