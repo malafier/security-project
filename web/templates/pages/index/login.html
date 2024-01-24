@@ -13,14 +13,6 @@
         </form>
         <a href="{{ url_for('recover') }}">Forgot password</a>
 
-        {% with messages = get_flashed_messages() %}
-            {% if messages %}
-                <ul>
-                    {% for message in messages %}
-                        <li>{{ message }}</li>
-                    {% endfor %}
-                </ul>
-            {% endif %}
-        {% endwith %}
+        {% include "snippets/_flash.html" %}
     </div>
 {% endblock %}
