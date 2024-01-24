@@ -11,7 +11,7 @@ from web.models.loan_models import Loan, LoanMessage, Notification, LoanLog, Not
 from web.models.user_models import User, LoginLog, LoginMonitor
 from web.models.model_handler import search_users, get_all_loans, get_all_debts, loans_given, loans_taken, \
     compare_logins, get_logs
-from security_utils import hash_password
+import security_utils as su
 
 # app
 app = Flask(__name__)
@@ -43,11 +43,14 @@ def login():
     if request.method == "POST":
         username = request.form["username"]
         password = request.form["password"]
+        if not su.login_data_is_valid(username, password):
+            return render_template("pages/index/login.html")
+
         user = load_user(username)
         if not user:
             flash("Login unsuccessful. Please check your username and password.", "danger")
             return render_template("pages/index/login.html")
-        if hash_password(password, user.salt) != user.password:
+        if su.hash_password(password, user.salt) != user.password:
             flash("Login unsuccessful. Please check your username and password.", "danger")
             login_monitor = LoginMonitor.query.filter_by(user_id=user.id).first()
             login_monitor.update()
@@ -82,9 +85,12 @@ def register():
         second_password = request.form["password-repeat"]
         first_name, last_name = request.form["firstname"], request.form["lastname"]
 
-        if password != second_password or User.query.filter_by(username=username).first():
-            flash("Register unsuccessful.", "danger")
-            return render_template("index.html")
+        if not su.registration_data_is_valid(username, first_name, last_name, password, second_password):
+            return render_template("pages/index/register.html")
+
+        if User.query.filter_by(username=username).first():
+            flash("Username already taken.", "danger")
+            return render_template("pages/index/register.html")
 
         user = User(username, first_name, last_name, password)
         user.add_to_db()
@@ -98,18 +104,18 @@ def recover():
         return render_template("pages/index/recover_password.html")
     if request.method == "POST":
         username = request.form["username"]
-        user = User.query.filter_by(username=username).first()
         recovery_password = request.form["recovery-password"]
         new_password, repeat_new_password = request.form["new-password"], request.form["repeat-new-password"]
+        if su.recovery_data_is_valid(username, recovery_password, new_password, repeat_new_password):
+            return render_template("pages/index/recover_password.html")
+
+        user = User.query.filter_by(username=username).first()
         if not user:
             flash("No such user.", "danger")
             return render_template("pages/index/recover_password.html")
 
         if user.recovery_password != recovery_password:
             flash("Incorrect recovery password.", "danger")
-            return render_template("pages/index/recover_password.html")
-        if new_password != repeat_new_password:
-            flash("Passwords don't match.", "danger")
             return render_template("pages/index/recover_password.html")
 
         user.recover(new_password)
@@ -149,6 +155,9 @@ def new_loan():
         lender = User.query.filter_by(username=request.form["lender"]).first()
         if not lender:
             flash("No such user.", "danger")
+            return render_template("pages/home/new_loan.html")
+        if not su.validate_new_loan(request.form["deadline"], request.form["amount"]):
+            flash("Invalid loan data.", "danger")
             return render_template("pages/home/new_loan.html")
 
         deadline = datetime.strptime(request.form["deadline"], "%Y-%m-%d")
@@ -230,17 +239,18 @@ def other_loans():
 def profile():
     if request.method == "GET":
         return render_template("pages/home/profile.html", user=current_user)
-    if request.method == "POST":    # change password
+    if request.method == "POST":  # change password
         old_password = request.form["old-password"]
         new_password = request.form["new-password"]
         second_new_password = request.form["new-password-repeat"]
 
-        if new_password != second_new_password or hash_password(old_password,
-                                                                current_user.salt) != current_user.password:
-            flash("Passwords don't match.", "error")
+        if su.hash_password(old_password, current_user.salt) != current_user.password:
+            flash("Wrong password", "error")
+            return render_template("pages/home/profile.html", user=current_user)
+        if not su.validate_password_change(new_password, second_new_password):
             return render_template("pages/home/profile.html", user=current_user)
 
-        current_user.password = hash_password(new_password, current_user.salt)
+        current_user.password = su.hash_password(new_password, current_user.salt)
         db.session.commit()
         flash("Password changed successfully.", "success")
         return render_template("pages/home/profile.html", user=current_user)

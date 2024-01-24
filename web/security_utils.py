@@ -2,12 +2,14 @@ import os
 import re
 from datetime import datetime
 from string import ascii_letters, digits
+from flask import flash
 
 import pyscrypt
 
 
 PEPPER = os.environ.get("PEPPER", "VERY_SECRET_AND_COMPLEX_PEPPER")
 SPECIAL_CHARS = "!@#$%^&*()-_+=~`[]{}|:;\"'<>,.?/"
+
 
 def hash_password(password, salt):
     return bytes(pyscrypt.hash(bytes(password + PEPPER, "utf8"), bytes(salt, "utf8"), 2048, 8, 1, 128))
@@ -39,20 +41,70 @@ def validate_password(password):
 
 
 def registration_data_is_valid(username, first_name, last_name, password, second_password):
-    return validate_username(username) and validate_name(first_name) and validate_last_name(last_name) \
-        and validate_password(password) and password == second_password
+    if not validate_username(username):
+        flash("Username must be between 3 and 16 characters long and can only contain letters, digits and underscores.", "danger")
+        return False
+    if not validate_name(first_name):
+        flash("First name must be between 2 and 20 characters long and can only contain letters.", "danger")
+        return False
+    if not validate_last_name(last_name):
+        flash("Last name must be between 2 and 30 characters long and can only contain letters.", "danger")
+        return False
+    if not validate_password(password):
+        flash("Password must be between 8 and 64 characters long and must contain at least one letter, one digit and one special character.", "danger")
+        return False
+    if password == second_password:
+        flash("Passwords do not match.", "danger")
+        return False
+    if in_dictionary(password):
+        flash("Password is too weak.", "danger")
+        return False
+    return True
+
+
+def recovery_data_is_valid(username, recovery_password, new_password, repeat_new_password):
+    if not validate_username(username):
+        flash("Username must be between 3 and 16 characters long and can only contain letters, digits and underscores.", "danger")
+        return False
+    if not valid_chars(recovery_password, ascii_letters + digits):
+        flash("Recovery password must contain only letters and digits.", "danger")
+        return False
+    if not validate_password(new_password):
+        flash("Password must be between 8 and 64 characters long and must contain at least one letter, one digit and one special character.", "danger")
+        return False
+    if new_password != repeat_new_password:
+        flash("Passwords do not match.", "danger")
+        return False
+    if in_dictionary(new_password):
+        flash("Password is too weak.", "danger")
+        return False
+    return True
 
 
 def login_data_is_valid(username, password):
     return validate_username(username) and validate_password(password)
 
 
-def validate_deadline_date(deadline):
+def validate_new_loan(deadline, amount):
     try:
         date = datetime.strptime(deadline, "%Y-%m-%d")
-        return date >= datetime.now()
+        pattern = re.compile(r'^\d+(\.\d{1,2})?$')
+        return date >= datetime.now() and pattern.match(amount) and float(amount) > 0
     except ValueError:
         return False
+
+
+def validate_password_change(new_password, repeat_new_password):
+    if not validate_password(new_password):
+        flash("Password must be between 8 and 64 characters long and must contain at least one letter, one digit and one special character.", "danger")
+        return False
+    if new_password != repeat_new_password:
+        flash("Passwords do not match.", "danger")
+        return False
+    if in_dictionary(new_password):
+        flash("Password is too weak.", "danger")
+        return False
+    return True
 
 
 def valid_chars(input: str, legal_chars: str) -> bool:
@@ -60,7 +112,7 @@ def valid_chars(input: str, legal_chars: str) -> bool:
 
 
 def in_dictionary(password):
-    with open("./resources/500-worst-passwords.txt", "r") as f:
+    with open("./web/resources/500-worst-passwords.txt", "r") as f:
         for line in f:
             if password == line.strip():
                 return True
