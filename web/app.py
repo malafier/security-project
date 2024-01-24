@@ -150,7 +150,7 @@ def accept_loan(id):
         loan.reject_request()
 
     message.resolve()
-    return redirect(url_for("home"))
+    return redirect(url_for("messages"))
 
 
 @app.route("/loans")
@@ -168,7 +168,7 @@ def repay_loan(id):
         loan = Loan.query.filter_by(id=id).first()
         if not loan:
             flash("No such loan.", "danger")
-            return render_template("pages/home/your_loans.html")
+            return redirect(url_for("loans"))
 
         loan.pay_back()
         return redirect(url_for("home"))
@@ -213,7 +213,7 @@ def profile():
 
         if new_password != second_new_password or hash_password(old_password,
                                                                 current_user.salt) != current_user.password:
-            flash("Passwords do not match.", "error")
+            flash("Passwords don't match.", "error")
             return render_template("pages/home/profile.html", user=current_user)
 
         current_user.password = hash_password(new_password, current_user.salt)

@@ -60,6 +60,7 @@ def search_users(search_string):
     )
     return query.all()
 
+
 def reverse_loan_status(status):
     if status == 1:
         return "REQUEST IN PROGRESS"
@@ -109,6 +110,7 @@ def get_logs(user: User):
         log.status = reverse_loan_status(log.status)
 
     return logs
+
 
 def compare_logins(previous_login: LoginLog, current_login: LoginLog, user: User):
     if previous_login is None:

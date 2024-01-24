@@ -14,8 +14,8 @@
             </tr>
             {% for row in loans_taken %}
                 <tr>
-                    <td>{{ row.user }}</td>
-                    <td>{{ row.amount }}</td>
+                    <td>{{ row.username }}</td>
+                    <td>{{ row.total_amount }}</td>
                 </tr>
             {% endfor %}
         </table>
@@ -32,8 +32,8 @@
             </tr>
             {% for row in loans_given %}
                 <tr>
-                    <td>{{ row.user }}</td>
-                    <td>{{ row.amount }}</td>
+                    <td>{{ row.username }}</td>
+                    <td>{{ row.total_amount }}</td>
                 </tr>
             {% endfor %}
         </table>
