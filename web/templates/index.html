@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <title>Ala ma długi</title>
+    <script src="https://unpkg.com/htmx.org@1.9.10"></script>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/index.css') }}">
 </head>
 <body>
@@ -12,8 +13,8 @@
     <p>Page for managing dues with your friends.</p>
 
         {% block content %}
-            <button class="button" onclick="window.location.href='/index'">Log in</button>
-            <button class="button" onclick="window.location.href='/register'">Sign up</button>
+            <a href="/login"><button class="button">Log in</button></a>
+            <a href="/register"><button class="button">Sign up</button></a>
         {% endblock %}
 </main>
 

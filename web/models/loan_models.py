@@ -14,15 +14,7 @@ class LoanStatus(Enum):
 
 
 class NotificationType(Enum):
-    REQUEST_ACCEPTED_BORROWER = "{full_name} ({username}) accepted your loan request for {amount}."
-    REQUEST_ACCEPTED_LENDER = "You accepted {full_name} ({username}) loan request for {amount}."
-    REQUEST_REJECTED_BORROWER = "{full_name} ({username}) rejected your loan request for {amount}."
-    REQUEST_REJECTED_LENDER = "You rejected {full_name} ({username}) loan request for {amount}."
-    REPAY_ACCEPTED_BORROWER = "{full_name} ({username}) accepted your repayment request for {amount}."
-    REPAY_ACCEPTED_LENDER = "You accepted {full_name} ({username}) repayment request for {amount}."
-    REPAY_REJECTED_BORROWER = "{full_name} ({username}) rejected your repayment request for {amount}."
-    REPAY_REJECTED_LENDER = "You rejected {full_name} ({username}) repayment request for {amount}."
-    # FAILED_LOGIN = "Someone tried to log in to your account 3 times, but failed."
+    FAILED_LOGIN = "Someone tried to log in to your account {amount} times unsuccessfully."
     LOGIN_FROM_NEW_DEVICE = "Is that you? Someone logged in to your account from a new device. Previous index was from {device_brand} {device_model} ({os_family} {os_version})."
     LOGIN_FROM_NEW_BROWSER = "Is that you? Someone logged in to your account from a new browser. Previous index was from {browser_family} {browser_version} on {os_family} {os_version}."
 
@@ -30,6 +22,15 @@ class NotificationType(Enum):
 class MessageType(Enum):
     NEW_LOAN = "{full_name} ({username}) wants to borrow {amount} from you, until {deadline}. Do you accept?"
     REPAYMENT = "{full_name} ({username}) claims to repay {amount} to you. Do you accept?"
+
+
+class LoanLogType(Enum):
+    REQUEST = "{req_full_name} ({req_username}) asked {res_full_name} ({res_username}) for a loan for {amount} until {deadline}."
+    REQUEST_ACCEPTED = "{res_full_name} ({res_username}) accepted {req_full_name} ({req_username}) loan request for {amount} until {deadline}."
+    REQUEST_REJECTED = "{res_full_name} ({res_username}) rejected {req_full_name} ({req_username}) loan request for {amount} until {deadline}."
+    REPAY = "{req_full_name} ({req_username}) claims to repay {amount} to {res_full_name} ({res_username})."
+    REPAY_ACCEPTED = "{res_full_name} ({res_username}) accepted {req_full_name} ({req_username}) repayment request for {amount}."
+    REPAY_REJECTED = "{res_full_name} ({res_username}) rejected {req_full_name} ({req_username}) repayment request for {amount}."
 
 
 class Loan(db.Model):
@@ -51,51 +52,40 @@ class Loan(db.Model):
     def add_to_db(self):
         db.session.add(self)
         db.session.commit()
-        self.log_change()
+        self.log_change(LoanLogType.REQUEST)
         message = LoanMessage(self.id, self.lender_id, MessageType.NEW_LOAN)
         message.add_to_db()
 
     def accept_request(self):
         self.status = LoanStatus.NOT_PAYED.value
-        self.commit()
-        self.log_change()
-        self.send_notification(NotificationType.REQUEST_ACCEPTED_BORROWER, NotificationType.REQUEST_ACCEPTED_LENDER)
+        db.session.commit()
+        self.log_change(LoanLogType.REQUEST_ACCEPTED)
 
     def reject_request(self):
         self.status = LoanStatus.CANCELED.value
-        self.commit()
-        self.log_change()
-        self.send_notification(NotificationType.REQUEST_REJECTED_BORROWER, NotificationType.REQUEST_REJECTED_LENDER)
+        db.session.commit()
+        self.log_change(LoanLogType.REQUEST_REJECTED)
 
     def pay_back(self):
         self.status = LoanStatus.PENDING.value
-        self.commit()
-        self.log_change()
+        db.session.commit()
+        self.log_change(LoanLogType.REPAY)
         message = LoanMessage(self.id, self.lender_id, MessageType.REPAYMENT)
         message.add_to_db()
 
-    def confirm_pay_back(self):
+    def confirm_repayment(self):
         self.status = LoanStatus.PAYED.value
-        self.commit()
-        self.log_change()
-        self.send_notification(NotificationType.REPAY_ACCEPTED_BORROWER, NotificationType.REPAY_ACCEPTED_LENDER)
+        db.session.commit()
+        self.log_change(LoanLogType.REPAY_ACCEPTED)
 
-    def reject_pay_back(self):
+    def reject_repayment(self):
         self.status = LoanStatus.NOT_PAYED.value
-        self.commit()
-        self.log_change()
-        self.send_notification(NotificationType.REPAY_REJECTED_BORROWER, NotificationType.REPAY_REJECTED_LENDER)
+        db.session.commit()
+        self.log_change(LoanLogType.REPAY_REJECTED)
 
-    def log_change(self):
-        log = LoanLog(self.id, self.status)
+    def log_change(self, log_type: LoanLogType):
+        log = LoanLog(self.id, self.status, log_type)
         log.add_to_db()
-
-    def send_notification(self, borrower_notification_type: NotificationType,
-                          lender_notification_type: NotificationType):
-        lender_notification = Notification(self.id, self.lender_id, borrower_notification_type)
-        lender_notification.add_to_db()
-        borrower_notification = Notification(self.id, self.borrower_id, lender_notification_type)
-        borrower_notification.add_to_db()
 
 
 class LoanMessage(db.Model):
@@ -106,6 +96,7 @@ class LoanMessage(db.Model):
     message = db.Column(db.String(), nullable=False)
     resolved = db.Column(db.Boolean, nullable=False, default=False)
     timestamp = db.Column(db.DateTime, nullable=False)
+    new_loan = db.Column(db.Boolean, nullable=False, default=True)
 
     def __init__(self, loan_id, receiver_id, message_type: MessageType):
         self.loan_id = loan_id
@@ -115,11 +106,13 @@ class LoanMessage(db.Model):
         loan = Loan.query.filter_by(id=loan_id).first()
         user = User.query.filter_by(id=loan.borrower_id).first()
         if message_type == MessageType.NEW_LOAN:
+            self.new_loan = True
             self.message = message_type.value.format(full_name=user.first_name + " " + user.last_name,
                                                      username=user.username,
                                                      amount=loan.amount,
                                                      deadline=loan.deadline)
         else:
+            self.new_loan = False
             self.message = message_type.value.format(full_name=user.first_name + " " + user.last_name,
                                                      username=user.username,
                                                      amount=loan.amount)
@@ -137,13 +130,31 @@ class LoanLog(db.Model):
     __tablename__ = 'loan_logs'
     id = db.Column(db.Integer, primary_key=True)
     loan_id = db.Column(db.Integer, db.ForeignKey('loans.id'), nullable=False)
+    message = db.Column(db.String(), nullable=False)
     status = db.Column(db.Integer, nullable=False)
     timestamp = db.Column(db.DateTime, nullable=False)
 
-    def __init__(self, loan_id, status):
+    def __init__(self, loan_id, status, log_type: LoanLogType):
         self.loan_id = loan_id
         self.status = status
         self.timestamp = datetime.now()
+
+        loan = Loan.query.filter_by(id=loan_id).first()
+        lender = User.query.filter_by(id=loan.lender_id).first()
+        borrower = User.query.filter_by(id=loan.borrower_id).first()
+        if log_type in [LoanLogType.REQUEST, LoanLogType.REQUEST_ACCEPTED, LoanLogType.REQUEST_REJECTED]:
+            self.message = log_type.value.format(req_full_name=borrower.first_name + " " + borrower.last_name,
+                                                 req_username=borrower.username,
+                                                 res_full_name=lender.first_name + " " + lender.last_name,
+                                                 res_username=lender.username,
+                                                 amount=loan.amount,
+                                                 deadline=loan.deadline)
+        else:
+            self.message = log_type.value.format(req_full_name=borrower.first_name + " " + borrower.last_name,
+                                                 req_username=borrower.username,
+                                                 res_full_name=lender.first_name + " " + lender.last_name,
+                                                 res_username=lender.username,
+                                                 amount=loan.amount)
 
     def add_to_db(self):
         db.session.add(self)
@@ -155,24 +166,15 @@ class Notification(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     receiver_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
     message = db.Column(db.String(), nullable=False)
-    seen = db.Column(db.Boolean, nullable=False, default=False)
+    # seen = db.Column(db.Boolean, nullable=False, default=False)
     timestamp = db.Column(db.DateTime, nullable=False)
 
-    def __init__(self, receiver_id, notification_type: NotificationType, loan_id=None, login_log=None):
+    def __init__(self, receiver_id, notification_type: NotificationType, login_log=None):
         self.receiver_id = receiver_id
         self.timestamp = datetime.now()
 
-        user = User.query.filter_by(id=receiver_id).first()
-        loan = Loan.query.filter_by(id=loan_id).first()
-        if notification_type in [NotificationType.REQUEST_ACCEPTED_BORROWER, NotificationType.REQUEST_REJECTED_LENDER,
-                                 NotificationType.REQUEST_REJECTED_BORROWER, NotificationType.REQUEST_ACCEPTED_LENDER,
-                                 NotificationType.REPAY_ACCEPTED_BORROWER, NotificationType.REPAY_ACCEPTED_LENDER,
-                                 NotificationType.REPAY_REJECTED_BORROWER, NotificationType.REPAY_REJECTED_LENDER]:
-            self.message = notification_type.value.format(full_name=user.first_name + " " + user.last_name,
-                                                          username=user.username,
-                                                          amount=loan.amount)
-        # elif message_type == NotificationType.FAILED_LOGIN:
-        #     self.message = message_type.value
+        if notification_type == NotificationType.FAILED_LOGIN:
+            self.message = notification_type.value
         elif notification_type == NotificationType.LOGIN_FROM_NEW_DEVICE:
             self.message = notification_type.value.format(device_brand=login_log.device_brand,
                                                           device_model=login_log.device_model,
@@ -188,6 +190,6 @@ class Notification(db.Model):
         db.session.add(self)
         db.session.commit()
 
-    def mark_as_seen(self):
-        self.seen = True
-        db.session.commit()
+    # def mark_as_seen(self):
+    #     self.seen = True
+    #     db.session.commit()

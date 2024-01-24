@@ -1,14 +1,15 @@
 import os
-from datetime import timedelta, datetime
+from datetime import timedelta, datetime, date
 
 from flask import Flask, render_template, request, redirect, flash, url_for
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
 from user_agents import parse
 
 from web.models.db_init import db
-from web.models.loan_models import Loan, LoanMessage, Notification
+from web.models.loan_models import Loan, LoanMessage, Notification, LoanLog
 from web.models.user_models import User, LoginLog
-from web.models.model_handler import search_users, get_all_loans, get_all_debts, loans_given, loans_taken, compare_logins
+from web.models.model_handler import search_users, get_all_loans, get_all_debts, loans_given, loans_taken, \
+    compare_logins, get_logs
 from security_utils import hash_password
 
 # app
@@ -21,7 +22,7 @@ with app.app_context():
 
 # index manager
 login_manager = LoginManager(app)
-login_manager.login_view = "hello_world"
+login_manager.login_view = "login"
 
 
 @login_manager.user_loader
@@ -88,6 +89,7 @@ def recover():
             return render_template("pages/index/recover_password.html")
         return render_template("pages/index/login.html", user=user)
 
+
 @app.route("/logout")
 @login_required
 def logout():
@@ -106,7 +108,7 @@ def home():
 @app.route("/messages")
 @login_required
 def messages():
-    messages = LoanMessage.query.filter_by(receiver_id=current_user.id).all()
+    messages = LoanMessage.query.filter_by(receiver_id=current_user.id, resolved=False).all()
     notifications = Notification.query.filter_by(receiver_id=current_user.id).all()
     return render_template("pages/home/messages.html", messages=messages, notifications=notifications)
 
@@ -130,27 +132,24 @@ def new_loan():
     return redirect(url_for("home"))
 
 
-@app.route("/new-loan/<int:id>/accept", methods=["PATCH"])
+@app.route("/new-loan/<int:id>", methods=["PATCH", "DELETE"])
 @login_required
-def accept_loan():
-    loan = Loan.query.filter_by(id=id).first()
+def accept_loan(id):
+    message = LoanMessage.query.filter_by(id=id).first()
+    if not message:
+        flash("No such message.", "danger")
+        return redirect(url_for("home"))
+    loan = Loan.query.filter_by(id=message.loan_id).first()
     if not loan:
         flash("No such loan.", "danger")
-        return render_template("pages/home/new_loan.html")
+        return redirect(url_for("home"))
 
-    loan.accept_request()
-    return redirect(url_for("home"))
+    if request.method == "PATCH":
+        loan.accept_request()
+    else:
+        loan.reject_request()
 
-
-@app.route("/new-loan/<int:id>/reject", methods=["PATCH"])
-@login_required
-def reject_loan():
-    loan = Loan.query.filter_by(id=id).first()
-    if not loan:
-        flash("No such loan.", "danger")
-        return render_template("pages/home/new_loan.html")
-
-    loan.reject_request()
+    message.resolve()
     return redirect(url_for("home"))
 
 
@@ -159,43 +158,37 @@ def reject_loan():
 def loans():
     loans = get_all_loans(current_user)
     debts = get_all_debts(current_user)
-    return render_template("pages/home/your_loans_debts.html", loans=loans, debts=debts, current_date=datetime.now())
+    return render_template("pages/home/your_loans.html", loans=loans, debts=debts, current_date=date.today())
 
 
-@app.route("/loans/<int:id>/repay", methods=["POST"])
+@app.route("/repay/<int:id>/", methods=["POST", "DELETE", "PATCH"])
 @login_required
-def repay_loan():
-    loan = Loan.query.filter_by(id=id).first()
+def repay_loan(id):
+    if request.method == "POST":
+        loan = Loan.query.filter_by(id=id).first()
+        if not loan:
+            flash("No such loan.", "danger")
+            return render_template("pages/home/your_loans.html")
+
+        loan.pay_back()
+        return redirect(url_for("home"))
+
+    message = LoanMessage.query.filter_by(id=id).first()
+    if not message:
+        flash("No such message.", "danger")
+        return redirect(url_for("messages"))
+    loan = Loan.query.filter_by(id=message.loan_id).first()
     if not loan:
         flash("No such loan.", "danger")
-        return render_template("pages/home/your_loans_debts.html")
+        return redirect(url_for("messages"))
 
-    loan.pay_back()
-    return redirect(url_for("home"))
+    if request.method == "DELETE":
+        loan.reject_repayment()
+    if request.method == "PATCH":
+        loan.confirm_repayment()
 
-
-@app.route("/loans/<int:id>/reject", methods=["POST"])
-@login_required
-def reject_repayment():
-    loan = Loan.query.filter_by(id=id).first()
-    if not loan:
-        flash("No such loan.", "danger")
-        return render_template("pages/home/your_loans_debts.html")
-
-    loan.reject_repayment()
-    return redirect(url_for("home"))
-
-
-@app.route("/loans/<int:id>/accept", methods=["POST"])
-@login_required
-def accept_repayment():
-    loan = Loan.query.filter_by(id=id).first()
-    if not loan:
-        flash("No such loan.", "danger")
-        return render_template("pages/home/your_loans_debts.html")
-
-    loan.confirm_repayment()
-    return redirect(url_for("home"))
+    message.resolve()
+    return redirect(url_for("messages"))
 
 
 @app.route("/other-loans", methods=["GET", "POST"])
@@ -233,7 +226,8 @@ def profile():
 @app.route("/logs")
 @login_required
 def logs():
-    return redirect(url_for("home")), 501
+    logs = get_logs(current_user)
+    return render_template("pages/home/logs.html", logs=logs)
 
 
 if __name__ == "__main__":

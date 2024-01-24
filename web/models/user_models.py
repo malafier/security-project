@@ -60,9 +60,9 @@ class LoginLog(db.Model):
         self.browser_version = user_info.browser.version_string
         self.os_family = user_info.os.family
         self.os_version = user_info.os.version_string
-        self.device_family = user_info.device.family
-        self.device_brand = user_info.device.brand
-        self.device_model = user_info.device.model
+        self.device_family = user_info.device.family if user_info.device.family else "N/A"
+        self.device_brand = user_info.device.brand if user_info.device.brand else "N/A"
+        self.device_model = user_info.device.model if user_info.device.model else "N/A"
         self.is_mobile = user_info.is_mobile
         self.is_tablet = user_info.is_tablet
         self.is_pc = user_info.is_pc

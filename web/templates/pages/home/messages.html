@@ -4,28 +4,36 @@
     <h4>Messages</h4>
 
     {% if messages %}
-    {% for message in messages %}
-        <div class="notification">
-            <p>{{ message.message }}</p>
-            <button hx-swap="none">Accept</button>
-            <button hx-swap="none">Decline</button>
-        </div>
-    {% endfor %}
+        {% for message in messages %}
+            <div class="notification" hx-swap="none">
+                <p>{{ message.message }}, {{ message.timestamp }}</p>
+                {% if message.new_loan %}
+                    <button class="btn btn-primary" hx-patch="/new-loan/{{ message.id }}">Accept</button>
+                    <button class="btn btn-danger" hx-delete="/new-loan/{{ message.id }}">Delete</button>
+                {% else %}
+                    <button class="btn btn-primary" hx-patch="/repay/{{ message.id }}">Accept</button>
+                    <button class="btn btn-danger" hx-delete="/repay/{{ message.id }}">Delete</button>
+                {% endif %}
+            </div>
+        {% endfor %}
     {% endif %}
 
-    <table>
-        <tr>
-            <th>Priority</th>
-            <th>Date</th>
-            <th>Message</th>
-        </tr>
-    {% for notification in notifications %}
-        <tr>
-            <td></td>
-            <td></td>
-            <td></td>
-        </tr>
-    {% endfor %}
-    </table>
+    {% if notifications %}
+        <h4>Notifications</h4>
+        <table>
+            <tr>
+                <th>Priority</th>
+                <th>Date</th>
+                <th>Message</th>
+            </tr>
+            {% for notification in notifications %}
+                <tr>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                </tr>
+            {% endfor %}
+        </table>
+    {% endif %}
 
 {% endblock %}

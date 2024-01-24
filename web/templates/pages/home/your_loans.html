@@ -48,7 +48,9 @@
                 <td>{{ debt.deadline }}</td>
                 <td>{{ debt.status }}</td>
                 <td>
-                    <button>Repay</button>
+                    {% if debt.status == "NOT PAYED" %}
+                        <button hx-post="/repay/{{ debt.id }}" hx-swap="none">Repay</button>
+                    {% endif %}
                 </td>
             </tr>
         {% endfor %}
