@@ -2,14 +2,13 @@ version: '3.8'
 
 services:
   web:
-    build: ./service
-    #command: python manage.py run -h 0.0.0.0
+    build: ./web
     #volumes:
     #  - ./service/web/:/usr/src/app/
     ports:
       - "5000:5000"
     env_file:
-      - service/.env
+      - .env
 
   nginx:
     build: ./nginx

@@ -5,17 +5,22 @@ from flask import Flask, render_template, request, redirect, flash, url_for
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
 from user_agents import parse
 
-import web.security_utils as su
-from web.models.db_init import db
-from web.models.loan_models import Loan, LoanMessage, Notification, NotificationType
-from web.models.model_handler import search_users, get_all_loans, get_all_debts, loans_given, loans_taken, \
-    compare_logins, get_logs
-from web.models.user_models import User, LoginLog, LoginMonitor
+import security_utils as su
+from models.db_init import db
+from models.loan_models import Loan, LoanMessage, Notification, NotificationType
+from models.model_handler import search_users, get_all_loans, get_all_debts, loans_given, loans_taken, compare_logins, \
+    get_logs
+from models.user_models import User, LoginLog, LoginMonitor
 
-# app
-template_dir = os.path.abspath('/service/web/templates/')
-db_dir = "/service/web/db/project.db"
-app = Flask(__name__, template_folder=template_dir)
+# app initialization
+IS_DOCKER = os.environ.get("IS_DOCKER", "False")
+if IS_DOCKER == "True":
+    template_dir = os.path.abspath('/web/templates/')
+    db_dir = "//web/db/project.db"
+    app = Flask(__name__, template_folder=template_dir)
+else:
+    db_dir = "../db/project.db"
+    app = Flask(__name__)
 app.config["SECRET_KEY"] = os.environ.get("PEPPER", "VERY_SECRET_AND_COMPLEX_KEY")
 app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///" + db_dir
 db.init_app(app)

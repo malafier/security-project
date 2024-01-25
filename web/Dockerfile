@@ -1,6 +1,6 @@
 FROM python:3-alpine3.10
 
-WORKDIR /service
+WORKDIR /web
 
 # set environment variables
 ENV PYTHONDONTWRITEBYTECODE 1
@@ -8,13 +8,11 @@ ENV PYTHONUNBUFFERED 1
 
 # install dependencies
 RUN pip install --upgrade pip
-COPY web/requirements.txt .
+COPY requirements.txt .
 RUN pip install -r requirements.txt
 
 COPY . .
-RUN chown 777 /service/web/db/project.db
+ENV PYTHONPATH "${PYTHONPATH}:/web/"
+RUN chown 777 /web/db/project.db
 
-#WORKDIR /web
-#ENTRYPOINT ["python3"]
-#CMD ["app.py"]
-CMD [ "gunicorn", "--bind", "0.0.0.0:5000", "web.wsgi:app" ]
+CMD [ "gunicorn", "--bind", "0.0.0.0:5000", "--pythonpath", "/web", "wsgi:app" ]
