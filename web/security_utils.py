@@ -22,12 +22,12 @@ def validate_username(username):
 
 def validate_name(name):
     valid_length = 2 <= len(name) <= 20
-    return valid_length and re.match(r"^[A-Z][a-z]+$", name)
+    return valid_length and re.match(r"^[A-ZŻŹĆĄŚĘŁÓŃ][a-zżźćńółęąś]+$", name)
 
 
 def validate_last_name(last_name):
     valid_length = 2 <= len(last_name) <= 30
-    return valid_length and re.match(r"^[A-Z][a-z]+($|-[A-Z][a-z]+$)", last_name)
+    return valid_length and re.match(r"^[A-ZŻŹĆĄŚĘŁÓŃ][a-zżźćńółęąś]+($|-[A-ZŻŹĆĄŚĘŁÓŃ][a-zżźćńółęąś]+$)", last_name)
 
 
 def validate_password(password):
@@ -41,44 +41,46 @@ def validate_password(password):
 
 
 def registration_data_is_valid(username, first_name, last_name, password, second_password):
+    flag = True
     if not validate_username(username):
         flash("Username must be between 3 and 16 characters long and can only contain letters, digits and underscores.", "danger")
-        return False
+        flag = False
     if not validate_name(first_name):
         flash("First name must be between 2 and 20 characters long and can only contain letters.", "danger")
-        return False
+        flag = False
     if not validate_last_name(last_name):
         flash("Last name must be between 2 and 30 characters long and can only contain letters.", "danger")
-        return False
+        flag = False
     if not validate_password(password):
         flash("Password must be between 8 and 64 characters long and must contain at least one letter, one digit and one special character.", "danger")
-        return False
+        flag = False
     if password != second_password:
         flash("Passwords do not match.", "danger")
-        return False
+        flag = False
     if in_dictionary(password):
         flash("Password is too weak.", "danger")
-        return False
-    return True
+        flag = False
+    return flag
 
 
 def recovery_data_is_valid(username, recovery_password, new_password, repeat_new_password):
+    flag = True
     if not validate_username(username):
         flash("Username must be between 3 and 16 characters long and can only contain letters, digits and underscores.", "danger")
-        return False
+        flag = False
     if not valid_chars(recovery_password, ascii_letters + digits):
         flash("Recovery password must contain only letters and digits.", "danger")
-        return False
+        flag = False
     if not validate_password(new_password):
         flash("Password must be between 8 and 64 characters long and must contain at least one letter, one digit and one special character.", "danger")
-        return False
+        flag = False
     if new_password != repeat_new_password:
         flash("Passwords do not match.", "danger")
-        return False
+        flag = False
     if in_dictionary(new_password):
         flash("Password is too weak.", "danger")
-        return False
-    return True
+        flag = False
+    return flag
 
 
 def login_data_is_valid(username, password):
@@ -95,16 +97,17 @@ def validate_new_loan(deadline, amount):
 
 
 def validate_password_change(new_password, repeat_new_password):
+    flag = True
     if not validate_password(new_password):
         flash("Password must be between 8 and 64 characters long and must contain at least one letter, one digit and one special character.", "danger")
-        return False
+        flag = False
     if new_password != repeat_new_password:
         flash("Passwords do not match.", "danger")
-        return False
+        flag = False
     if in_dictionary(new_password):
         flash("Password is too weak.", "danger")
-        return False
-    return True
+        flag = False
+    return flag
 
 
 def valid_chars(input: str, legal_chars: str) -> bool:
