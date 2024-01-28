@@ -13,7 +13,12 @@
         <input type="password" name="old-password" id="old-password"><br>
 
         <label for="new-password">New password</label>
-        <input type="password" name="new-password" id="new-password"><br>
+        <input type="password" name="new-password" id="new-password" required
+               hx-post="/entropy" hx-target="#entropy" hx-swap="outerHTML"
+               hx-trigger="input changed delay:500ms, password"
+        ><br>
+
+        <div id="entropy">No password</div>
 
         <label for="new-password-repeat">Repeat new password</label>
         <input type="password" name="new-password-repeat" id="new-password-repeat"><br>

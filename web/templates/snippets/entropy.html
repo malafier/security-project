@@ -1,0 +1,11 @@
+<div id="entropy">
+    {% if entropy >= 0 and entropy < 25 %}
+        <p>Password is poor (entropy: {{ entropy|round(2) }})</p>
+    {% elif entropy >= 25 and entropy < 50 %}
+        <p>Password is week (entropy: {{ entropy|round(2) }})</p>
+    {% elif entropy >= 50 and entropy < 75 %}
+        <p>Password is reasonable (entropy: {{ entropy|round(2) }})</p>
+    {% else %}
+        <p>Password is very good (entropy: {{ entropy|round(2) }})</p>
+    {% endif %}
+</div>

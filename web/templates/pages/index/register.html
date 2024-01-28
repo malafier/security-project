@@ -4,15 +4,21 @@
     <div class="register">
         <form method="post" action="{{ url_for('register') }}">
             Register
-            <label>Username<input type="text" name="username"></label>
+            <label>Username<input type="text" name="username" required></label>
             <br>
-            <label>Password<input type="password" name="password"></label>
+            <label>
+                Password
+                <input type="password" name="password" required
+                    hx-post="/entropy" hx-target="#entropy" hx-swap="outerHTML"
+                    hx-trigger="input changed delay:500ms, password"
+                ></label>
             <br>
-            <label>Repeat password<input type="password" name="password-repeat"></label>
+            <div id="entropy"><p>No password</p></div>
+            <label>Repeat password<input type="password" name="password-repeat" required></label>
             <br>
-            <label>Firstname<input type="text" name="firstname"></label>
+            <label>Firstname<input type="text" name="firstname" required></label>
             <br>
-            <label>Lastname<input type="text" name="lastname"></label>
+            <label>Lastname<input type="text" name="lastname" required></label>
             <br>
             <input type="submit" value="Register">
         </form>

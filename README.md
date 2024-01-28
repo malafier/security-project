@@ -13,7 +13,7 @@ Prosta aplikację do ewidencji pożyczek. -- Jest grupa użytkowników, którzy 
 - dodatkowa kontrola spójności sesji (przeciw atakom XSRF),
 - ✓ monitorowanie liczby nieudanych prób logowania,
 - progresywne dodawanie opóźnienia przy weryfikacji hasła w celu wydłużenia ataków zdalnych,
-- informowanie użytkownika o jakości jego hasła (jego entropii),
+- ✓ informowanie użytkownika o jakości jego hasła (jego entropii),
 - ✓ kontrola odporności nowego hasła na ataki słownikowe,
 - ✓ informowanie użytkownika o nowych podłączeniach do jego konta.
 

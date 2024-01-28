@@ -1,8 +1,8 @@
 from sqlalchemy import func, or_
 
-from models.db_init import db
-from models.user_models import User, LoginLog
-from models.loan_models import Loan, LoanStatus, Notification, NotificationType, LoanLog
+from web.models.db_init import db
+from web.models.user_models import User, LoginLog
+from web.models.loan_models import Loan, LoanStatus, Notification, NotificationType, LoanLog
 
 
 def loans_given(user: User):

@@ -3,8 +3,8 @@ from datetime import datetime, date
 from string import ascii_letters, digits
 
 from flask_login import UserMixin
-from models.db_init import db
-from security_utils import hash_password
+from web.models.db_init import db
+from web.security_utils import hash_password
 
 
 class User(UserMixin, db.Model):

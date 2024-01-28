@@ -3,6 +3,10 @@
 {% block content %}
     <h4>Messages</h4>
 
+    {% if not messages and not notifications %}
+        <p>No messages or notifications</p>
+    {% endif %}
+
     {% if messages %}
         {% for message in messages %}
             <div class="notification" hx-swap="none">

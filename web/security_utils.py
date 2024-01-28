@@ -1,5 +1,7 @@
+import math
 import os
 import re
+from collections import Counter
 from datetime import datetime
 from string import ascii_letters, digits
 from flask import flash
@@ -120,3 +122,9 @@ def in_dictionary(password):
             if password == line.strip():
                 return True
     return False
+
+
+def entropy(password):
+    total_chars_count = len(ascii_letters + digits + SPECIAL_CHARS)
+    password_length = len(password)
+    return password_length * math.log2(total_chars_count)

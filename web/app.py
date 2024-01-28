@@ -5,12 +5,12 @@ from flask import Flask, render_template, request, redirect, flash, url_for
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
 from user_agents import parse
 
-import security_utils as su
-from models.db_init import db
-from models.loan_models import Loan, LoanMessage, Notification, NotificationType
-from models.model_handler import search_users, get_all_loans, get_all_debts, loans_given, loans_taken, compare_logins, \
-    get_logs
-from models.user_models import User, LoginLog, LoginMonitor
+import web.security_utils as su
+from web.models.db_init import db
+from web.models.loan_models import Loan, LoanMessage, Notification, NotificationType
+from web.models.model_handler import search_users, get_all_loans, get_all_debts, loans_given, loans_taken, get_logs, \
+    compare_logins
+from web.models.user_models import User, LoginLog, LoginMonitor
 
 # app initialization
 IS_DOCKER = os.environ.get("IS_DOCKER", "False")
@@ -268,6 +268,13 @@ def profile():
 def logs():
     logs = get_logs(current_user)
     return render_template("pages/home/logs.html", logs=logs)
+
+
+@app.route("/entropy", methods=["POST"])
+def entropy():
+    password = request.form["new-password"] if request.form["new-password"] else request.form["password"]
+    entropy = su.entropy(password)
+    return render_template("snippets/entropy.html", entropy=entropy)
 
 
 if __name__ == "__main__":
