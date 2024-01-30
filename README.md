@@ -10,7 +10,7 @@ Prosta aplikację do ewidencji pożyczek. -- Jest grupa użytkowników, którzy 
 - ✓ **(niezbędne)** możliwość zmiany hasła,
 - ✓ **(niezbędne)** możliwość odzyskania dostępu w przypadku utraty hasła,
 - ✓ **(niezbędne)** rejestrowanie nowych pożyczek i podgląd zapisanych danych,
-- dodatkowa kontrola spójności sesji (przeciw atakom XSRF),
+- ✓ dodatkowa kontrola spójności sesji (przeciw atakom XSRF),
 - ✓ monitorowanie liczby nieudanych prób logowania,
 - ✓ progresywne dodawanie opóźnienia przy weryfikacji hasła w celu wydłużenia ataków zdalnych,
 - ✓ informowanie użytkownika o jakości jego hasła (jego entropii),
