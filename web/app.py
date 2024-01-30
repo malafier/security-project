@@ -1,4 +1,6 @@
 import os
+import random
+import time
 from datetime import timedelta, datetime, date
 
 from flask import Flask, render_template, request, redirect, flash, url_for
@@ -50,17 +52,19 @@ def login():
         username = request.form["username"]
         password = request.form["password"]
         if not su.login_data_is_valid(username, password):
-            return render_template("pages/index/login.html")
+            return render_template("pages/index/login.html"), 401
 
         user = load_user(username)
         if not user:
             flash("Login unsuccessful. Please check your username and password.", "danger")
-            return render_template("pages/index/login.html")
+            time.sleep(random.uniform(4, 5))
+            return render_template("pages/index/login.html"), 401
         if su.hash_password(password, user.salt) != user.password:
             flash("Login unsuccessful. Please check your username and password.", "danger")
             login_monitor = LoginMonitor.query.filter_by(user_id=user.id).first()
             login_monitor.update()
-            return render_template("pages/index/login.html")
+            time.sleep(random.uniform(1.5, 2.5))
+            return render_template("pages/index/login.html"), 401
         login_user(user)
 
         user_agent = parse(request.headers.get('User-Agent'))
@@ -270,9 +274,12 @@ def logs():
     return render_template("pages/home/logs.html", logs=logs)
 
 
-@app.route("/entropy", methods=["POST"])
-def entropy():
-    password = request.form["new-password"] if request.form["new-password"] else request.form["password"]
+@app.route("/entropy/<what>", methods=["POST"])
+def entropy(what):
+    if what == "register":
+        password = request.form["password"]
+    else:
+        password = request.form["new-password"]
     entropy = su.entropy(password)
     return render_template("snippets/entropy.html", entropy=entropy)
 
