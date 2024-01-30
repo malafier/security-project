@@ -184,10 +184,10 @@ def new_loan():
         lender = User.query.filter_by(username=request.form["lender"]).first()
         if not lender:
             flash("No such user.", "danger")
-            return render_template("pages/home/new_loan.html")
+            return render_template("pages/home/new_loan.html", token=csrf_token)
         if not su.validate_new_loan(request.form["deadline"], request.form["amount"]):
             flash("Invalid loan data.", "danger")
-            return render_template("pages/home/new_loan.html")
+            return render_template("pages/home/new_loan.html", token=csrf_token)
 
         deadline = datetime.strptime(request.form["deadline"], "%Y-%m-%d")
         loan = Loan(lender.id, current_user.id, request.form["amount"], deadline)
@@ -304,14 +304,14 @@ def profile():
 
         if su.hash_password(old_password, current_user.salt) != current_user.password:
             flash("Wrong password", "error")
-            return render_template("pages/home/profile.html", user=current_user)
+            return render_template("pages/home/profile.html", user=current_user, token=csrf_token)
         if not su.validate_password_change(new_password, second_new_password):
-            return render_template("pages/home/profile.html", user=current_user)
+            return render_template("pages/home/profile.html", user=current_user, token=csrf_token)
 
         current_user.password = su.hash_password(new_password, current_user.salt)
         db.session.commit()
         flash("Password changed successfully.", "success")
-        return render_template("pages/home/profile.html", user=current_user)
+        return render_template("pages/home/profile.html", user=current_user, token=csrf_token)
     return redirect(url_for("home"))
 
 
