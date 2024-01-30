@@ -12,11 +12,9 @@
             <div class="notification" hx-swap="none">
                 <p>{{ message.message }}, {{ message.timestamp }}</p>
                 {% if message.new_loan %}
-                    <button class="btn btn-primary" hx-patch="/new-loan/{{ message.id }}">Accept</button>
-                    <button class="btn btn-danger" hx-delete="/new-loan/{{ message.id }}">Delete</button>
+                    {{ buttons('new-loan', message.id, token) }}
                 {% else %}
-                    <button class="btn btn-primary" hx-patch="/repay/{{ message.id }}">Accept</button>
-                    <button class="btn btn-danger" hx-delete="/repay/{{ message.id }}">Delete</button>
+                    {{ buttons('repay', message.id, token) }}
                 {% endif %}
             </div>
         {% endfor %}
@@ -39,3 +37,16 @@
     {% endif %}
 
 {% endblock %}
+
+{% macro buttons(url_path, message_id, token) -%}
+    <form method="post" action="/{{ url_path }}/{{ message_id }}">
+        <input type="hidden" name="CSRFToken" value="{{ token }}">
+        <input type="hidden" name="accept" value="true">
+        <button class="btn btn-primary">Accept</button>
+    </form>
+    <form method="post" action="/{{ url_path }}/{{ message_id }}">
+        <input type="hidden" name="CSRFToken" value="{{ token }}">
+        <input type="hidden" name="accept" value="false">
+        <button class="btn btn-danger">Reject</button>
+    </form>
+{%- endmacro %}

@@ -49,7 +49,10 @@
                 <td>{{ debt.status }}</td>
                 <td>
                     {% if debt.status == "NOT PAYED" %}
-                        <button hx-post="/repay/{{ debt.id }}" hx-swap="none">Repay</button>
+                        <form method="post" action="/repay/req/{{ debt.id }}">
+                            <input type="hidden" name="CSRFToken" value="{{ token }}">
+                            <input type="submit" value="Repay">
+                        </form>
                     {% endif %}
                 </td>
             </tr>

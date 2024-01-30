@@ -12,6 +12,8 @@ SQLAlchemy==2.0.23
 typing_extensions==4.9.0
 Werkzeug==3.0.1
 zipp==3.17.0
+flask_wtf==1.2.1
+wtforms==3.1.2
 
 pyscrypt~=1.6.2
 user_agents~=2.2.0

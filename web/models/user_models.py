@@ -3,6 +3,7 @@ from datetime import datetime, date
 from string import ascii_letters, digits
 
 from flask_login import UserMixin
+from flask_wtf.csrf import generate_csrf
 from web.models.db_init import db
 from web.security_utils import hash_password
 
@@ -59,6 +60,7 @@ class LoginLog(db.Model):
     is_tablet = db.Column(db.Boolean, nullable=False)
     is_pc = db.Column(db.Boolean, nullable=False)
     is_bot = db.Column(db.Boolean, nullable=False)
+    token = db.Column(db.String(), nullable=False)
 
     def __init__(self, user_id, user_info):
         self.user_id = user_id
@@ -74,6 +76,7 @@ class LoginLog(db.Model):
         self.is_tablet = user_info.is_tablet
         self.is_pc = user_info.is_pc
         self.is_bot = user_info.is_bot
+        self.token = generate_csrf()
 
     def add_to_db(self):
         db.session.add(self)

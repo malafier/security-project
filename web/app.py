@@ -9,10 +9,11 @@ from user_agents import parse
 
 import web.security_utils as su
 from web.models.db_init import db
-from web.models.loan_models import Loan, LoanMessage, Notification, NotificationType
+from web.models.loan_models import Loan, LoanMessage
 from web.models.model_handler import search_users, get_all_loans, get_all_debts, loans_given, loans_taken, get_logs, \
     compare_logins
 from web.models.user_models import User, LoginLog, LoginMonitor
+from web.models.notification_model import Notification, NotificationType
 
 # app initialization
 IS_DOCKER = os.environ.get("IS_DOCKER", "False")
@@ -74,9 +75,6 @@ def login():
         current_login.add_to_db()
 
         login_monitor = LoginMonitor.query.filter_by(user_id=user.id).first()
-        if not login_monitor:
-            login_monitor = LoginMonitor(user.id, date.today(), 0)
-            login_monitor.add_to_db()
         if login_monitor.login_count >= 3:
             notification = Notification(user.id, NotificationType.FAILED_LOGINS, login_monitor=login_monitor)
             notification.add_to_db()
@@ -105,6 +103,13 @@ def register():
         user = User(username, first_name, last_name, password)
         user.add_to_db()
         login_user(user, duration=timedelta(hours=1))
+        login_monitor = LoginMonitor(user.id, date.today(), 0)
+        login_monitor.add_to_db()
+
+        user_agent = parse(request.headers.get('User-Agent'))
+        current_login = LoginLog(user.id, user_agent)
+        current_login.add_to_db()
+
         return render_template("pages/index/recovery_password.html", user=user, new_acount=True), 201
 
 
@@ -140,6 +145,13 @@ def logout():
     return redirect(url_for("hello_world"))
 
 
+@app.route("/session-expired")
+@login_required
+def session_expired():
+    logout_user()
+    return render_template("pages/index/session_expired.html")
+
+
 @app.route("/home", methods=["GET"])
 @login_required
 def home():
@@ -153,15 +165,22 @@ def home():
 def messages():
     messages = LoanMessage.query.filter_by(receiver_id=current_user.id, resolved=False).all()
     notifications = Notification.query.filter_by(receiver_id=current_user.id).all()
-    return render_template("pages/home/messages.html", messages=messages, notifications=notifications)
+    csrf_token = current_user.last_login().token
+    return render_template("pages/home/messages.html", messages=messages, notifications=notifications, token=csrf_token)
 
 
 @app.route("/new-loan", methods=["GET", "POST"])
 @login_required
 def new_loan():
     if request.method == "GET":
-        return render_template("pages/home/new_loan.html")
+        csrf_token = current_user.last_login().token
+        return render_template("pages/home/new_loan.html", token=csrf_token)
     if request.method == "POST":
+        csrf_token = current_user.last_login().token
+        form_token = request.form["CSRFToken"]
+        if csrf_token != form_token:
+            return redirect(url_for("session_expired"))
+
         lender = User.query.filter_by(username=request.form["lender"]).first()
         if not lender:
             flash("No such user.", "danger")
@@ -178,9 +197,14 @@ def new_loan():
     return redirect(url_for("home"))
 
 
-@app.route("/new-loan/<int:id>", methods=["PATCH", "DELETE"])
+@app.route("/new-loan/<int:id>", methods=["POST"])
 @login_required
 def accept_loan(id):
+    csrf_token = current_user.last_login().token
+    form_token = request.form["CSRFToken"]
+    if csrf_token != form_token:
+        return redirect(url_for("session_expired"))
+
     message = LoanMessage.query.filter_by(id=id).first()
     if not message:
         flash("No such message.", "danger")
@@ -190,7 +214,7 @@ def accept_loan(id):
         flash("No such loan.", "danger")
         return redirect(url_for("home"))
 
-    if request.method == "PATCH":
+    if request.form["accept"] == "true":
         loan.accept_request()
     else:
         loan.reject_request()
@@ -207,17 +231,30 @@ def loans():
     return render_template("pages/home/your_loans.html", loans=loans, debts=debts, current_date=date.today())
 
 
-@app.route("/repay/<int:id>/", methods=["POST", "DELETE", "PATCH"])
+@app.route("/repay/req/<int:id>/", methods=["POST"])
+@login_required
+def repay_loan_req(id):
+    csrf_token = current_user.last_login().token
+    form_token = request.form["CSRFToken"]
+    if csrf_token != form_token:
+        return redirect(url_for("session_expired"))
+
+    loan = Loan.query.filter_by(id=id).first()
+    if not loan:
+        flash("No such loan.", "danger")
+        return redirect(url_for("loans"))
+
+    loan.pay_back()
+    return redirect(url_for("home"))
+
+
+@app.route("/repay/<int:id>/", methods=["POST"])
 @login_required
 def repay_loan(id):
-    if request.method == "POST":
-        loan = Loan.query.filter_by(id=id).first()
-        if not loan:
-            flash("No such loan.", "danger")
-            return redirect(url_for("loans"))
-
-        loan.pay_back()
-        return redirect(url_for("home"))
+    csrf_token = current_user.last_login().token
+    form_token = request.form["CSRFToken"]
+    if csrf_token != form_token:
+        return redirect(url_for("session_expired"))
 
     message = LoanMessage.query.filter_by(id=id).first()
     if not message:
@@ -228,10 +265,10 @@ def repay_loan(id):
         flash("No such loan.", "danger")
         return redirect(url_for("messages"))
 
-    if request.method == "DELETE":
-        loan.reject_repayment()
-    if request.method == "PATCH":
+    if request.form["accept"] == "true":
         loan.confirm_repayment()
+    else:
+        loan.reject_repayment()
 
     message.resolve()
     return redirect(url_for("messages"))
@@ -248,11 +285,22 @@ def other_loans():
 @login_required
 def profile():
     if request.method == "GET":
-        return render_template("pages/home/profile.html", user=current_user)
+        csrf_token = current_user.last_login().token
+        return render_template("pages/home/profile.html", user=current_user, token=csrf_token)
     if request.method == "POST":  # change password
+        csrf_token = current_user.last_login().token
+        form_token = request.form["CSRFToken"]
+        if csrf_token != form_token:
+            return redirect(url_for("session_expired"))
+
         old_password = request.form["old-password"]
         new_password = request.form["new-password"]
         second_new_password = request.form["new-password-repeat"]
+
+        csrf_token = current_user.last_login().token
+        form_token = request.form["CSRFToken"]
+        if csrf_token != form_token:
+            return redirect(url_for("session_expired"))
 
         if su.hash_password(old_password, current_user.salt) != current_user.password:
             flash("Wrong password", "error")

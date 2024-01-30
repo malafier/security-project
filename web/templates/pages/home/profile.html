@@ -23,6 +23,8 @@
         <label for="new-password-repeat">Repeat new password</label>
         <input type="password" name="new-password-repeat" id="new-password-repeat"><br>
 
+        <input type="hidden" name="CSRFToken" value="{{ token }}">
+
         <input type="submit" value="Change password">
     </form>
 
