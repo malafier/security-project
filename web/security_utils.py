@@ -10,6 +10,12 @@ import pyscrypt
 
 PEPPER = os.environ.get("PEPPER", "VERY_SECRET_AND_COMPLEX_PEPPER")
 SPECIAL_CHARS = "!@#$%^&*()-_+=~`[]{}|:;\"'<>,.?/"
+IS_DOCKER = os.environ.get("IS_DOCKER", "False")
+
+if IS_DOCKER == "True":
+    PASS_PATH = "/web/resources/500-worst-passwords.txt"
+else:
+    PASS_PATH = "./web/resources/500-worst-passwords.txt"
 
 
 def hash_password(password, salt):
@@ -116,7 +122,7 @@ def valid_chars(input: str, legal_chars: str) -> bool:
 
 
 def in_dictionary(password):
-    with open("./web/resources/500-worst-passwords.txt", "r") as f:
+    with open(PASS_PATH, "r") as f:
         for line in f:
             if password == line.strip():
                 return True
