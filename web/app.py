@@ -122,16 +122,17 @@ def recover():
         recovery_password = request.form["recovery-password"]
         new_password, repeat_new_password = request.form["new-password"], request.form["repeat-new-password"]
         if su.recovery_data_is_valid(username, recovery_password, new_password, repeat_new_password):
-            return render_template("pages/index/recover_password.html")
+            flash("Invalid data.", "danger")
+            return render_template("pages/index/recover_password.html"), 400
 
         user = User.query.filter_by(username=username).first()
         if not user:
             flash("No such user.", "danger")
-            return render_template("pages/index/recover_password.html")
+            return render_template("pages/index/recover_password.html"), 400
 
         if user.recovery_password != recovery_password:
             flash("Incorrect recovery password.", "danger")
-            return render_template("pages/index/recover_password.html")
+            return render_template("pages/index/recover_password.html"), 400
 
         user.recover(new_password)
         login_user(user)
