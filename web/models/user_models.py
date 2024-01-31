@@ -4,8 +4,8 @@ from string import ascii_letters, digits
 
 from flask_login import UserMixin
 from flask_wtf.csrf import generate_csrf
-from web.models.db_init import db
-from web.security_utils import hash_password
+from models.db_init import db
+from security_utils import hash_password
 
 
 class User(UserMixin, db.Model):

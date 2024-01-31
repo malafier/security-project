@@ -1,8 +1,8 @@
 from datetime import datetime
 from enum import Enum
 
-from web.models.db_init import db
-from web.models.user_models import User
+from models.db_init import db
+from models.user_models import User
 
 
 class LoanStatus(Enum):

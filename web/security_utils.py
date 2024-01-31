@@ -1,7 +1,6 @@
 import math
 import os
 import re
-from collections import Counter
 from datetime import datetime
 from string import ascii_letters, digits
 from flask import flash

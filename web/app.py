@@ -7,13 +7,13 @@ from flask import Flask, render_template, request, redirect, flash, url_for
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
 from user_agents import parse
 
-import web.security_utils as su
-from web.models.db_init import db
-from web.models.loan_models import Loan, LoanMessage
-from web.models.model_handler import search_users, get_all_loans, get_all_debts, loans_given, loans_taken, get_logs, \
+import security_utils as su
+from models.db_init import db
+from models.loan_models import Loan, LoanMessage
+from models.model_handler import search_users, get_all_loans, get_all_debts, loans_given, loans_taken, get_logs, \
     compare_logins
-from web.models.user_models import User, LoginLog, LoginMonitor
-from web.models.notification_model import Notification, NotificationType
+from models.user_models import User, LoginLog, LoginMonitor
+from models.notification_model import Notification, NotificationType
 
 # app initialization
 IS_DOCKER = os.environ.get("IS_DOCKER", "False")

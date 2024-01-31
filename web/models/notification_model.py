@@ -1,7 +1,7 @@
 from datetime import datetime
 from enum import Enum
 
-from web.models.db_init import db
+from models.db_init import db
 
 
 class NotificationType(Enum):
